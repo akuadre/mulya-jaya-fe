@@ -1,116 +1,91 @@
-import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import {
+  Home,
+  Boxes,
+  List,
+  Users,
+  BarChart2,
+  LogOut,
+  Moon,
+  Sun,
+} from "lucide-react";
+import { NavLink } from "react-router-dom";
+
+const NavItem = ({ to, icon: Icon, children }) => (
+  <NavLink
+    to={to}
+    className={({ isActive }) =>
+      `flex items-center space-x-3 px-4 py-2.5 rounded-lg transition-colors duration-200 ${
+        isActive ? "bg-green-600/75 text-white" : "text-gray-500 hover:bg-gray-100"
+      }`
+    }
+  >
+    <Icon className="w-5 h-5" />
+    <span className="font-medium">{children}</span>
+  </NavLink>
+);
 
 const Sidebar = () => {
-  const location = useLocation();
-
-  const menuItems = [
-    {
-      name: 'Dashboard',
-      path: '/dashboard',
-      icon: (
-        <svg
-          className="w-6 h-6"
-          fill="currentColor"
-          viewBox="0 0 20 20"
-        >
-          <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293-.293a1 1 0 000-1.414l-7-7z"></path>
-        </svg>
-      ),
-    },
-    {
-      name: 'Manage products',
-      path: '/products',
-      icon: (
-        <svg
-          className="w-6 h-6"
-          fill="currentColor"
-          viewBox="0 0 20 20"
-        >
-          <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 6a1 1 0 011-1h10a1 1 0 011 1v10a1 1 0 01-1 1H5a1 1 0 01-1-1V6zM6 9a1 1 0 000 2h8a1 1 0 100-2H6z"></path>
-        </svg>
-      ),
-    },
-    {
-      name: 'Manage order',
-      path: '/orders',
-      icon: (
-        <svg
-          className="w-6 h-6"
-          fill="currentColor"
-          viewBox="0 0 20 20"
-        >
-          <path
-            fillRule="evenodd"
-            d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
-            clipRule="evenodd"
-          ></path>
-        </svg>
-      ),
-    },
-    {
-      name: 'Manage user',
-      path: '/users',
-      icon: (
-        <svg
-          className="w-6 h-6"
-          fill="currentColor"
-          viewBox="0 0 20 20"
-        >
-          <path d="M10 9a3 3 0 100-6 3 3 0 000 6zM20 18a8 8 0 10-16 0h16z"></path>
-        </svg>
-      ),
-    },
-    {
-      name: 'Report',
-      path: '/reports',
-      icon: (
-        <svg
-          className="w-6 h-6"
-          fill="currentColor"
-          viewBox="0 0 20 20"
-        >
-          <path
-            fillRule="evenodd"
-            d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 100 2h6a1 1 0 100-2H7z"
-            clipRule="evenodd"
-          ></path>
-        </svg>
-      ),
-    },
-  ];
-
-  const handleLogout = () => {
-    // Logika logout, misalnya memanggil API
-    console.log('User logged out');
-  };
-
-   return (
-    <aside className="w-64 bg-white shadow-lg min-h-screen px-6 py-8 fixed top-0 left-0">
-      <div className="p-4">
-        <h1 className="text-3xl font-bold text-gray-800">MulyaAdmin</h1>
+  return (
+    <aside className="w-64 bg-white shadow-md flex flex-col h-screen fixed top-0 left-0">
+      {/* Logo */}
+      <div className="p-6">
+        <h1 className="text-2xl font-bold text-gray-800">MulyaAdmin</h1>
       </div>
 
-      <nav className="mt-8 space-y-2">
-        {menuItems.map((item) => {
-          const isActive = location.pathname.startsWith(item.path);
-          return (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={`flex items-center space-x-5 text-lg py-4 px-4 transition-colors duration-200 rounded-lg ${
-                isActive
-                  ? 'text-[#0ACF83] font-semibold bg-green-50 border-l-4 border-[#0ACF83]'
-                  : 'text-gray-700 hover:text-[#0ACF83] hover:bg-gray-100'
-              }`}
-            >
-              {item.icon}
-              <span>{item.name}</span>
-            </Link>
-          );
-        })}
-        {/* ... (Logout button) ... */}
+      {/* Menu */}
+      <nav className="flex-1 px-4 space-y-1">
+        <p className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase">
+          Main
+        </p>
+        <NavItem to="/dashboard" icon={Home}>
+          Dashboard
+        </NavItem>
+        <NavItem to="/products" icon={Boxes}>
+          Manage products
+        </NavItem>
+        <NavItem to="/orders" icon={List}>
+          Manage order
+        </NavItem>
+        <NavItem to="/users" icon={Users}>
+          Manage user
+        </NavItem>
+        <NavItem to="/reports" icon={BarChart2}>
+          Report
+        </NavItem>
       </nav>
+
+      {/* Dark mode toggle */}
+      <div className="p-4 border-t">
+        <div className="flex justify-between items-center p-2 rounded-lg bg-gray-100">
+          <span className="font-medium text-gray-700">Dark mode</span>
+          <button className="flex items-center gap-2 p-1.5 rounded-full bg-white">
+            <div className="p-1 rounded-full bg-gray-200 text-gray-500">
+              <Sun size={16} />
+            </div>
+            <div className="p-1 text-gray-500">
+              <Moon size={16} />
+            </div>
+          </button>
+        </div>
+      </div>
+
+      {/* User section */}
+      <div className="p-4 border-t flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <img
+            src="https://ui-avatars.com/api/?name=Admin+User&background=c7d2fe&color=3730a3"
+            alt="User Avatar"
+            className="w-10 h-10 rounded-full"
+          />
+          <div>
+            <p className="font-semibold text-gray-800">Admin User</p>
+            <p className="text-sm text-gray-500">Super Admin</p>
+          </div>
+        </div>
+        <button className="text-gray-500 hover:text-red-500 transition">
+          <LogOut className="w-5 h-5" />
+        </button>
+      </div>
     </aside>
   );
 };

@@ -32,7 +32,7 @@ const Users = () => {
   const totalPages = Math.ceil(filteredUsers.length / rowsPerPage);
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen font-sans">
+    <div className="bg-gray-100 min-h-screen font-sans">
       <div className="bg-white shadow-lg rounded-lg p-6">
         {/* Header */}
         <div className="mb-4 border-b pb-4">

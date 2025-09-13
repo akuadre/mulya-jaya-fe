@@ -17,7 +17,8 @@ const AppLayout = () => {
 
         {/* Page content */}
         <main className="flex-1 p-6">
-          <div className="bg-white/20 shadow-lg rounded-lg p-6">
+          {/* <div className="bg-white/20 shadow-lg rounded-lg p-6"> */}
+          <div className="">
             <Outlet />
           </div>
         </main>

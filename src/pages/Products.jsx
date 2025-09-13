@@ -154,7 +154,7 @@ const Products = () => {
   };
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen font-sans">
+    <div className="bg-gray-100 min-h-screen font-sans">
       <div className="bg-white shadow-lg rounded-lg p-6">
         {/* Header */}
         <div className="mb-4 border-b pb-4">
@@ -193,10 +193,10 @@ const Products = () => {
 
           <button
             onClick={() => setShowAddModal(true)}
-            className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition flex items-center gap-2 shadow-md"
+            className="bg-green-600 text-white px-4 py-3 rounded-lg hover:bg-green-700 transition flex items-center shadow-md"
           >
-            <PlusCircle className="w-5 h-5" />
-            <span>Tambah Produk</span>
+            <PlusCircle className="w-5 h-5 mr-1" />
+            <span className="w-30">Tambah Produk</span>
           </button>
         </div>
 

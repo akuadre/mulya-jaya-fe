@@ -7,20 +7,26 @@ import Products from "./pages/Products.jsx";
 import Reports from "./pages/Reports.jsx";
 import AppLayout from "./layouts/AppLayout.jsx";
 
+import { GuestRoute, ProtectedRoute } from "./routes/AuthRoutes.jsx";
+
 function App() {
   return (
     <Router>
       <Routes>
-        {/* Auth */}
-        <Route path="/login" element={<Login />} />
+        {/* Auth / Login */}
+        <Route element={<GuestRoute />}>
+          <Route path="/login" element={<Login />} />
+        </Route>
 
         {/* Protected Routes */}
-        <Route element={<AppLayout />}>
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/orders" element={<Orders />} />
-          <Route path="/users" element={<Users />} />
-          <Route path="/products" element={<Products />} />
-          <Route path="/reports" element={<Reports />} />
+        <Route element={<ProtectedRoute />}>
+          <Route element={<AppLayout />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/orders" element={<Orders />} />
+            <Route path="/users" element={<Users />} />
+            <Route path="/products" element={<Products />} />
+            <Route path="/reports" element={<Reports />} />
+          </Route>
         </Route>
 
         {/* Kalau route tidak ada → Dashboard */}

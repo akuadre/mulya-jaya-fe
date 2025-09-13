@@ -55,7 +55,7 @@ const Orders = () => {
   const totalPages = Math.ceil(filteredOrders.length / rowsPerPage);
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen font-sans">
+    <div className="bg-gray-100 min-h-screen font-sans">
       {/* Card Utuh */}
       <div className="bg-white shadow-lg rounded-lg p-6 space-y-4">
         {/* Header */}

@@ -1,141 +1,117 @@
-import { useState } from "react";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 const Reports = () => {
-  const [data] = useState([
-    {
-      tanggal: "2025-09-01",
-      pesanan: "#ORD-00123",
-      total: 1200000,
-      status: "Selesai",
-    },
-    {
-      tanggal: "2025-09-02",
-      pesanan: "#ORD-00124",
-      total: 800000,
-      status: "Diproses",
-    },
-    {
-      tanggal: "2025-09-03",
-      pesanan: "#ORD-00125",
-      total: 500000,
-      status: "Dibatalkan",
-    },
-  ]);
+  const yearlyData = [
+    { year: "2016", total: 10000 },
+    { year: "2017", total: 22000 },
+    { year: "2018", total: 18000 },
+    { year: "2019", total: 35000 },
+    { year: "2020", total: 25000 },
+    { year: "2021", total: 30000 },
+  ];
 
-  // Data chart dari data penjualan
-  const chartData = data.map((item, i) => ({
-    tanggal: item.tanggal,
-    total: item.total,
-  }));
+  const monthlyData = [
+    { month: "1", total: 12000 },
+    { month: "2", total: 20000 },
+    { month: "3", total: 28000 },
+    { month: "4", total: 22000 },
+    { month: "5", total: 21000 },
+    { month: "6", total: 34000 },
+  ];
 
-  const getStatusStyle = (status) => {
-    if (status === "Selesai") return "bg-emerald-100 text-emerald-700";
-    if (status === "Diproses") return "bg-yellow-100 text-yellow-700";
-    if (status === "Dibatalkan") return "bg-red-100 text-red-700";
-    return "bg-gray-100 text-gray-700";
-  };
+  const stok = [
+    { id: 1, name: "Dior", price: 2000000, stok: 2 },
+    { id: 2, name: "Dior", price: 2000000, stok: 3 },
+    { id: 3, name: "Dior", price: 2000000, stok: 5 },
+    { id: 4, name: "Dior", price: 2000000, stok: 5 },
+    { id: 5, name: "Dior", price: 2000000, stok: 6 },
+  ];
 
   return (
-    <div>
-      <h1 className="text-3xl font-bold mb-6 text-gray-800">
-        Laporan Penjualan
-      </h1>
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <h1 className="text-3xl font-bold mb-6 text-gray-800">Report</h1>
 
-      {/* Chart */}
-      <div className="bg-white shadow-md rounded-lg p-6 mb-6">
-        <h2 className="text-xl font-semibold mb-4">Grafik Penjualan</h2>
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="tanggal" />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            <Line
-              type="monotone"
-              dataKey="total"
-              stroke="#2563eb"
-              strokeWidth={3}
-            />
-          </LineChart>
-        </ResponsiveContainer>
+      {/* Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div className="bg-white shadow rounded-lg p-6 flex items-center space-x-4">
+          <div className="bg-emerald-100 text-emerald-600 p-3 rounded-full">
+            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+            </svg>
+          </div>
+          <div>
+            <div className="text-gray-500 text-sm">Total pemasukan (tahun)</div>
+            <div className="text-xl font-semibold">IDR 250.000.000</div>
+          </div>
+        </div>
+
+        <div className="bg-white shadow rounded-lg p-6 flex items-center space-x-4">
+          <div className="bg-pink-100 text-pink-600 p-3 rounded-full">
+            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+            </svg>
+          </div>
+          <div>
+            <div className="text-gray-500 text-sm">Total pemasukan (bulan)</div>
+            <div className="text-xl font-semibold">IDR 5.000.000</div>
+          </div>
+        </div>
       </div>
 
-      {/* Filter */}
-      <div className="flex gap-4 mb-4">
-        <input
-          type="date"
-          className="border p-2 rounded focus:ring-2 focus:ring-emerald-500 outline-none"
-        />
-        <input
-          type="date"
-          className="border p-2 rounded focus:ring-2 focus:ring-emerald-500 outline-none"
-        />
-        <button className="bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700 transition">
-          Filter
-        </button>
+      {/* Charts */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div className="bg-white shadow rounded-lg p-6">
+          <h3 className="font-semibold mb-4">Pendapatan (Tahun)</h3>
+          <ResponsiveContainer width="100%" height={250}>
+            <LineChart data={yearlyData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="year" />
+              <YAxis />
+              <Tooltip formatter={(value) => `Rp ${value.toLocaleString("id-ID")}`} />
+              <Line type="monotone" dataKey="total" stroke="#fbbf24" strokeWidth={3} dot />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="bg-white shadow rounded-lg p-6">
+          <h3 className="font-semibold mb-4">Pendapatan (Bulan)</h3>
+          <ResponsiveContainer width="100%" height={250}>
+            <LineChart data={monthlyData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="month" />
+              <YAxis />
+              <Tooltip formatter={(value) => `Rp ${value.toLocaleString("id-ID")}`} />
+              <Line type="monotone" dataKey="total" stroke="#34d399" strokeWidth={3} dot />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
       </div>
 
-      {/* Tabel */}
-      <div className="overflow-x-auto rounded-lg shadow border border-gray-200">
-        <table className="w-full text-sm text-gray-700">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="px-6 py-3 text-left font-semibold border-b">No</th>
-              <th className="px-6 py-3 text-left font-semibold border-b">
-                Tanggal
-              </th>
-              <th className="px-6 py-3 text-left font-semibold border-b">
-                Pesanan
-              </th>
-              <th className="px-6 py-3 text-right font-semibold border-b">
-                Total
-              </th>
-              <th className="px-6 py-3 text-left font-semibold border-b">
-                Status
-              </th>
+      {/* Stok */}
+      <div className="bg-white shadow rounded-lg p-6">
+        <h3 className="font-semibold mb-4">Stok</h3>
+        <table className="w-full text-sm text-gray-700 border-collapse">
+          <thead>
+            <tr className="text-gray-500 border-b">
+              <th className="py-2 text-left">No</th>
+              <th className="py-2 text-left">Name</th>
+              <th className="py-2 text-left">Price</th>
+              <th className="py-2 text-left">Stok</th>
             </tr>
           </thead>
           <tbody>
-            {data.map((row, i) => (
-              <tr key={i} className="hover:bg-gray-50 transition-colors">
-                <td className="px-6 py-4 border-b">{i + 1}</td>
-                <td className="px-6 py-4 border-b">{row.tanggal}</td>
-                <td className="px-6 py-4 border-b">{row.pesanan}</td>
-                <td className="px-6 py-4 border-b text-right">
-                  Rp {row.total.toLocaleString("id-ID")}
-                </td>
-                <td className="px-6 py-4 border-b">
-                  <span
-                    className={`${getStatusStyle(
-                      row.status
-                    )} px-3 py-1 rounded-full text-xs font-semibold`}
-                  >
-                    {row.status}
-                  </span>
+            {stok.map((item, i) => (
+              <tr key={i} className="hover:bg-gray-50">
+                <td className="py-2">{String(i + 1).padStart(2, "0")}.</td>
+                <td>{item.name}</td>
+                <td>Rp {item.price.toLocaleString("id-ID")}</td>
+                <td className={`font-semibold ${item.stok <= 3 ? "text-red-500" : ""}`}>
+                  {item.stok}
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
-      </div>
-
-      {/* Ringkasan */}
-      <div className="mt-4 text-right text-gray-700 font-medium">
-        Total Pendapatan: Rp{" "}
-        {data
-          .reduce((acc, item) => acc + item.total, 0)
-          .toLocaleString("id-ID")}
       </div>
     </div>
   );

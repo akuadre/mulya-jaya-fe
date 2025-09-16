@@ -56,19 +56,14 @@ const Login = () => {
           <div className="flex flex-col space-y-16">
             <div>
               <p className="text-sm text-gray-500 uppercase tracking-widest mb-1">
-                Welcome back
+                Welcome back, admin!
               </p>
               <h1 className="text-4xl font-extrabold text-gray-900 leading-tight">
                 Login to your account
               </h1>
               <p className="text-gray-500 mt-2">
-                Don’t have an account?{" "}
-                <a
-                  href="#"
-                  className="text-emerald-600 font-semibold hover:underline"
-                >
-                  Sign up
-                </a>
+                Mulya Jaya Admin Web
+                
               </p>
             </div>
 

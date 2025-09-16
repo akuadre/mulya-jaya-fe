@@ -193,7 +193,7 @@ const Orders = () => {
             <table className="w-full text-sm">
               <thead className="bg-gray-50">
                 <tr className="text-left text-gray-500 uppercase border-b border-gray-200">
-                  <th className="py-3 px-4">ID</th>
+                  <th className="py-3 px-4">No</th>
                   <th className="py-3 px-4">Kode Pesanan</th>
                   <th className="py-3 px-4">Pelanggan (Nama)</th>
                   <th className="py-3 px-4">Produk</th>

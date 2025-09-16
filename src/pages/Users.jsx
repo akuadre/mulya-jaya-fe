@@ -16,12 +16,13 @@ const Users = () => {
     const fetchUsers = async () => {
       setLoading(true);
       setError(null); // Reset error state sebelum fetch baru
+      
+      const token = localStorage.getItem("adminToken");
+      if (!token) return window.location.href = "/login"; // fallback
       try {
         const response = await fetch('http://localhost:8000/api/users', {
           headers: {
-            // Catatan: Hardcoded token tidak disarankan untuk produksi. 
-            // Gunakan metode yang lebih aman seperti Context atau Redux.
-            'Authorization': 'Bearer 2|vaczTuz2a4eTfipfZc0yJJ9iwyML2j0LUpZDDOJN13d2c9c1'
+            Authorization: `Bearer ${token}`,
           }
         });
 

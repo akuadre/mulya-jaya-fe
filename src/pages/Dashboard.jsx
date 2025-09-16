@@ -218,7 +218,10 @@ const Dashboard = () => {
                             : "text-green-500"
                         }`}
                       >
-                        {order.status === "processing" ? "Sent" : order.status === "completed" ? "Finish" : order.status}
+                        {order.status === "processing" ? "Sent" 
+                        : order.status === "completed" ? "Finish" 
+                        : order.status === "pending" ? "Pending" 
+                        : order.status}
                       </td>
                     </tr>
                   ))

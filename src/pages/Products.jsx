@@ -324,31 +324,101 @@ const Products = () => {
           </div>
         </div>
       )}
+      
 
-      {/* Modal Edit */}
-      {showEditModal && editingProduct && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50 p-4">
-          <div className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-lg overflow-y-auto max-h-screen">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold text-gray-800">Edit Produk</h2>
-              <button onClick={() => setShowEditModal(false)} className="text-gray-400 hover:text-gray-600 transition">
-                <XCircle className="w-7 h-7" />
-              </button>
-            </div>
-            <form onSubmit={handleEditSubmit} className="space-y-4">
-              <input type="file" name="foto" accept="image/*" onChange={handleEditChange} className="w-full border border-gray-300 p-2 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-              <input type="text" name="nama" value={editingProduct.nama} onChange={handleEditChange} placeholder="Nama Produk" className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" required />
-              <input type="text" name="jenis" value={editingProduct.jenis} onChange={handleEditChange} placeholder="Jenis Produk" className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" required />
-              <input type="number" name="harga" value={editingProduct.harga} onChange={handleEditChange} placeholder="Harga" className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" required />
-              <textarea name="deskripsi" value={editingProduct.deskripsi} onChange={handleEditChange} placeholder="Deskripsi" rows="4" className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" required />
-              <div className="flex justify-end gap-3 mt-4">
-                <button type="button" onClick={() => setShowEditModal(false)} className="px-6 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition">Batal</button>
-                <button type="submit" className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">Simpan Perubahan</button>
-              </div>
-            </form>
-          </div>
+     {showEditModal && editingProduct && (
+  <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50 p-4">
+    <div className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-lg overflow-y-auto max-h-screen">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-bold text-gray-800">Edit Produk</h2>
+        <button
+          onClick={() => setShowEditModal(false)}
+          className="text-gray-400 hover:text-gray-600 transition"
+        >
+          ✕
+        </button>
+      </div>
+
+      <form onSubmit={handleEditSubmit} className="space-y-4">
+        {/* Preview foto lama */}
+        {editingProduct.image_url && !(editingProduct.foto instanceof File) && (
+          <img
+            src={`http://localhost:8000/images/products/${editingProduct.image_url}`}
+            alt={editingProduct.nama}
+            className="w-24 h-24 object-cover rounded-lg mb-2"
+          />
+        )}
+
+        {/* Input file */}
+        <input
+          type="file"
+          name="image_url"
+          accept="image/*"
+          onChange={handleEditChange}
+          className="w-full border border-gray-300 p-2 rounded-lg"
+        />
+
+        <input
+          type="text"
+          name="name"
+          value={editingProduct.name || ""}
+          onChange={handleEditChange}
+          placeholder="Nama Produk"
+          className="w-full border border-gray-300 p-3 rounded-lg"
+          required
+        />
+
+        <input
+          type="text"
+          name="type"
+          value={editingProduct.type || ""}
+          onChange={handleEditChange}
+          placeholder="Jenis Produk"
+          className="w-full border border-gray-300 p-3 rounded-lg"
+          required
+        />
+
+        <input
+          type="number"
+          name="price"
+          value={editingProduct.price || ""}
+          onChange={handleEditChange}
+          placeholder="Harga"
+          className="w-full border border-gray-300 p-3 rounded-lg"
+          required
+        />
+
+        <textarea
+          name="description"
+          value={editingProduct.description || ""}
+          onChange={handleEditChange}
+          placeholder="Deskripsi"
+          rows="4"
+          className="w-full border border-gray-300 p-3 rounded-lg"
+          required
+        />
+
+        <div className="flex justify-end gap-3 mt-4">
+          <button
+            type="button"
+            onClick={() => setShowEditModal(false)}
+            className="px-6 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition"
+          >
+            Batal
+          </button>
+          <button
+            type="submit"
+            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+          >
+            Simpan Perubahan
+          </button>
         </div>
-      )}
+      </form>
+    </div>
+  </div>
+)}
+
+
 
       {/* Modal Delete Confirmation */}
       {showDeleteModal && (

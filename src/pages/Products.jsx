@@ -186,7 +186,7 @@ const Products = () => {
   );
 
   return (
-    <div className="bg-gray-100 min-h-screen font-sans p-8">
+    <div className="bg-gray-100 min-h-screen font-sans p-4 sm:p-6">
       <div className="bg-white shadow-lg rounded-lg p-6 max-w-7xl mx-auto">
         <div className="mb-4 border-b pb-4">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">

@@ -2,10 +2,15 @@ import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import { Search, Edit, Trash2, PlusCircle, XCircle } from "lucide-react";
 
+// Import SweetAlert2
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
+
+const MySwal = withReactContent(Swal);
+
 const Products = () => {
-  
   const authToken = localStorage.getItem("adminToken");
-  
+
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -39,16 +44,26 @@ const Products = () => {
   };
 
   const fetchProducts = async () => {
-    if (!authToken) return window.location.href = "/login"; // fallback
+    if (!authToken) return (window.location.href = "/login"); // fallback
     setLoading(true);
     setError(null);
 
     try {
-      const response = await axios.get("http://localhost:8000/api/products", axiosHeaders);
-      const dataWithNo = Array.isArray(response.data.data) ? response.data.data.map((item, index) => ({ ...item, no: index + 1 })) : [];
+      const response = await axios.get(
+        "http://localhost:8000/api/products",
+        axiosHeaders
+      );
+      const dataWithNo = Array.isArray(response.data.data)
+        ? response.data.data.map((item, index) => ({
+            ...item,
+            no: index + 1,
+          }))
+        : [];
       setProducts(dataWithNo);
     } catch (err) {
-      setError("Gagal memuat data. Pastikan server Laravel berjalan dan token otorisasi valid.");
+      setError(
+        "Gagal memuat data. Pastikan server Laravel berjalan dan token otorisasi valid."
+      );
       console.error("Fetch error:", err);
     } finally {
       setLoading(false);
@@ -61,8 +76,12 @@ const Products = () => {
 
   const filteredItems = useMemo(() => {
     return products.filter((item) => {
-      const matchText = JSON.stringify(item).toLowerCase().includes(filterText.toLowerCase());
-      const matchType = filterType === "Semua" || item.type.toLowerCase() === filterType.toLowerCase();
+      const matchText = JSON.stringify(item)
+        .toLowerCase()
+        .includes(filterText.toLowerCase());
+      const matchType =
+        filterType === "Semua" ||
+        item.type.toLowerCase() === filterType.toLowerCase();
       return matchText && matchType;
     });
   }, [products, filterText, filterType]);
@@ -101,16 +120,40 @@ const Products = () => {
         },
       });
       setShowAddModal(false);
-      setNewProduct({ name: "", type: "", price: "", description: "", stock: "", photo: null });
+      setNewProduct({
+        name: "",
+        type: "",
+        price: "",
+        description: "",
+        stock: "",
+        photo: null,
+      });
       fetchProducts();
+      // SweetAlert for success
+      MySwal.fire({
+        icon: "success",
+        title: "Berhasil!",
+        text: "Produk berhasil ditambahkan.",
+        timer: 2000,
+        showConfirmButton: false,
+      });
     } catch (err) {
-      // Improved error handling for 422 validation errors
       if (err.response && err.response.status === 422) {
         const validationErrors = err.response.data.errors;
         const errorMessages = Object.values(validationErrors).flat();
-        setError(`Gagal menambahkan produk. Periksa input Anda: ${errorMessages.join(", ")}`);
+        MySwal.fire({
+          icon: "error",
+          title: "Gagal!",
+          text: `Gagal menambahkan produk. Periksa input Anda: ${errorMessages.join(
+            ", "
+          )}`,
+        });
       } else {
-        setError("Gagal menambahkan produk. Coba lagi.");
+        MySwal.fire({
+          icon: "error",
+          title: "Gagal!",
+          text: "Gagal menambahkan produk. Coba lagi.",
+        });
         console.error("Add error:", err);
       }
     }
@@ -140,22 +183,43 @@ const Products = () => {
     }
 
     try {
-      await axios.post(`http://localhost:8000/api/products/${editingProduct.id}`, formData, {
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-        },
-      });
+      await axios.post(
+        `http://localhost:8000/api/products/${editingProduct.id}`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+        }
+      );
       setShowEditModal(false);
       setEditingProduct(null);
       fetchProducts();
+      // SweetAlert for success
+      MySwal.fire({
+        icon: "success",
+        title: "Berhasil!",
+        text: "Produk berhasil diperbarui.",
+        timer: 2000,
+        showConfirmButton: false,
+      });
     } catch (err) {
-      // Improved error handling for 422 validation errors
       if (err.response && err.response.status === 422) {
         const validationErrors = err.response.data.errors;
         const errorMessages = Object.values(validationErrors).flat();
-        setError(`Gagal memperbarui produk. Periksa input Anda: ${errorMessages.join(", ")}`);
+        MySwal.fire({
+          icon: "error",
+          title: "Gagal!",
+          text: `Gagal memperbarui produk. Periksa input Anda: ${errorMessages.join(
+            ", "
+          )}`,
+        });
       } else {
-        setError("Gagal memperbarui produk. Coba lagi.");
+        MySwal.fire({
+          icon: "error",
+          title: "Gagal!",
+          text: "Gagal memperbarui produk. Coba lagi.",
+        });
         console.error("Edit error:", err);
       }
     }
@@ -163,18 +227,44 @@ const Products = () => {
 
   // Handle deleting a product
   const handleDelete = (id) => {
-    setDeleteProductId(id);
-    setShowDeleteModal(true);
+    MySwal.fire({
+      title: "Konfirmasi Hapus",
+      text: "Apakah Anda yakin ingin menghapus produk ini?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#6c757d",
+      confirmButtonText: "Ya, Hapus!",
+      cancelButtonText: "Batal",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        confirmDelete(id);
+      }
+    });
   };
 
-  const confirmDelete = async () => {
+  const confirmDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:8000/api/products/${deleteProductId}`, axiosHeaders);
-      setShowDeleteModal(false);
+      await axios.delete(
+        `http://localhost:8000/api/products/${id}`,
+        axiosHeaders
+      );
       setDeleteProductId(null);
       fetchProducts();
+      // SweetAlert for success
+      MySwal.fire({
+        icon: "success",
+        title: "Dihapus!",
+        text: "Produk berhasil dihapus.",
+        timer: 2000,
+        showConfirmButton: false,
+      });
     } catch (err) {
-      setError("Gagal menghapus produk. Coba lagi.");
+      MySwal.fire({
+        icon: "error",
+        title: "Gagal!",
+        text: "Gagal menghapus produk. Coba lagi.",
+      });
       console.error("Delete error:", err);
     }
   };
@@ -197,13 +287,27 @@ const Products = () => {
         <tbody>
           {[...Array(rowsPerPage)].map((_, index) => (
             <tr key={index} className="border-b border-gray-200">
-              <td className="py-3 px-4"><div className="h-4 bg-gray-200 rounded"></div></td>
-              <td className="py-3 px-4"><div className="w-20 h-20 bg-gray-200 rounded-md"></div></td>
-              <td className="py-3 px-4"><div className="h-4 bg-gray-200 rounded w-3/4"></div></td>
-              <td className="py-3 px-4"><div className="h-4 bg-gray-200 rounded w-1/2"></div></td>
-              <td className="py-3 px-4"><div className="h-4 bg-gray-200 rounded w-2/3"></div></td>
-              <td className="py-3 px-4"><div className="h-4 bg-gray-200 rounded w-1/4"></div></td>
-              <td className="py-3 px-4"><div className="h-4 bg-gray-200 rounded w-full"></div></td>
+              <td className="py-3 px-4">
+                <div className="h-4 bg-gray-200 rounded"></div>
+              </td>
+              <td className="py-3 px-4">
+                <div className="w-20 h-20 bg-gray-200 rounded-md"></div>
+              </td>
+              <td className="py-3 px-4">
+                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+              </td>
+              <td className="py-3 px-4">
+                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+              </td>
+              <td className="py-3 px-4">
+                <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+              </td>
+              <td className="py-3 px-4">
+                <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+              </td>
+              <td className="py-3 px-4">
+                <div className="h-4 bg-gray-200 rounded w-full"></div>
+              </td>
               <td className="py-3 px-4 flex items-center gap-2">
                 <div className="h-6 w-16 bg-gray-200 rounded-lg"></div>
                 <div className="h-6 w-16 bg-gray-200 rounded-lg"></div>
@@ -211,7 +315,7 @@ const Products = () => {
             </tr>
           ))}
         </tbody>
-        </table>
+      </table>
     </div>
   );
 
@@ -262,7 +366,9 @@ const Products = () => {
         {loading ? (
           <LoadingTable />
         ) : error ? (
-          <div className="text-center py-10 text-red-500 font-semibold">{error}</div>
+          <div className="text-center py-10 text-red-500 font-semibold">
+            {error}
+          </div>
         ) : (
           <div className="overflow-x-auto text-base">
             <table className="w-full text-sm border-collapse">
@@ -279,41 +385,58 @@ const Products = () => {
                 </tr>
               </thead>
               <tbody>
-                {paginatedItems.map((p) => (
-                  p && <tr key={p.id} className="hover:bg-gray-50 border-b border-gray-200">
-                    <td className="py-3 px-4 font-semibold text-gray-800">{p.no}</td>
-                    <td className="py-3 px-4">
-                      <img
-                        src={p.image_url 
-                          ? `http://localhost:8000/images/products/${p.image_url}` 
-                          : "https://placehold.co/80x80/E0E7FF/4338CA?text=No+Image"}
-                        alt={p.name}
-                        className="w-20 h-20 object-cover rounded-md shadow-sm"
-                      />
-                    </td>
-                    <td className="py-3 px-4">{p.name}</td>
-                    <td className="py-3 px-4">{p.type}</td>
-                    <td className="py-3 px-4">IDR {p.price ? p.price.toLocaleString("id-ID") : '-'}</td>
-                    <td className="py-3 px-4">{p.stock || 'N/A'}</td>
-                    <td className="py-3 px-4 text-gray-600">
-                      {p.description && p.description.length > 30 ? `${p.description.substring(0, 30)}...` : p.description}
-                    </td>
-                    <td className="py-3 px-4 flex items-center gap-2">
-                      <button
-                        onClick={() => { setEditingProduct(p); setShowEditModal(true); }}
-                        className="bg-blue-100 text-blue-700 font-semibold px-3 py-1.5 rounded-lg hover:bg-blue-200 transition flex items-center"
+                {paginatedItems.map(
+                  (p) =>
+                    p && (
+                      <tr
+                        key={p.id}
+                        className="hover:bg-gray-50 border-b border-gray-200"
                       >
-                        <Edit className="w-4 h-4 mr-1" /> Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(p.id)}
-                        className="bg-red-100 text-red-700 font-semibold px-3 py-1.5 rounded-lg hover:bg-red-200 transition flex items-center"
-                      >
-                        <Trash2 className="w-4 h-4 mr-1" /> Hapus
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                        <td className="py-3 px-4 font-semibold text-gray-800">
+                          {p.no}
+                        </td>
+                        <td className="py-3 px-4">
+                          <img
+                            src={
+                              p.image_url
+                                ? `http://localhost:8000/images/products/${p.image_url}`
+                                : "https://placehold.co/80x80/E0E7FF/4338CA?text=No+Image"
+                            }
+                            alt={p.name}
+                            className="w-20 h-20 object-cover rounded-md shadow-sm"
+                          />
+                        </td>
+                        <td className="py-3 px-4">{p.name}</td>
+                        <td className="py-3 px-4">{p.type}</td>
+                        <td className="py-3 px-4">
+                          IDR {p.price ? p.price.toLocaleString("id-ID") : "-"}
+                        </td>
+                        <td className="py-3 px-4">{p.stock || "N/A"}</td>
+                        <td className="py-3 px-4 text-gray-600">
+                          {p.description && p.description.length > 30
+                            ? `${p.description.substring(0, 30)}...`
+                            : p.description}
+                        </td>
+                        <td className="py-3 px-4 flex items-center gap-2">
+                          <button
+                            onClick={() => {
+                              setEditingProduct(p);
+                              setShowEditModal(true);
+                            }}
+                            className="bg-blue-100 text-blue-700 font-semibold px-3 py-1.5 rounded-lg hover:bg-blue-200 transition flex items-center"
+                          >
+                            <Edit className="w-4 h-4 mr-1" /> Edit
+                          </button>
+                          <button
+                            onClick={() => handleDelete(p.id)}
+                            className="bg-red-100 text-red-700 font-semibold px-3 py-1.5 rounded-lg hover:bg-red-200 transition flex items-center"
+                          >
+                            <Trash2 className="w-4 h-4 mr-1" /> Hapus
+                          </button>
+                        </td>
+                      </tr>
+                    )
+                )}
               </tbody>
             </table>
           </div>
@@ -324,7 +447,10 @@ const Products = () => {
             <span>Baris per halaman:</span>
             <select
               value={rowsPerPage}
-              onChange={(e) => { setRowsPerPage(Number(e.target.value)); setPage(0); }}
+              onChange={(e) => {
+                setRowsPerPage(Number(e.target.value));
+                setPage(0);
+              }}
               className="px-1 py-0 bg-transparent focus:outline-none border rounded"
             >
               <option value={5}>5</option>
@@ -334,15 +460,18 @@ const Products = () => {
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setPage(p => Math.max(p - 1, 0))}
+              onClick={() => setPage((p) => Math.max(p - 1, 0))}
               disabled={page === 0}
               className="px-2 py-1 border rounded hover:bg-gray-100 disabled:text-gray-400"
             >
               Sebelumnya
             </button>
-            <span>{startIndex + 1}-{Math.min(endIndex, filteredItems.length)} dari {filteredItems.length}</span>
+            <span>
+              {startIndex + 1}-{Math.min(endIndex, filteredItems.length)} dari{" "}
+              {filteredItems.length}
+            </span>
             <button
-              onClick={() => setPage(p => Math.min(p + 1, totalPages - 1))}
+              onClick={() => setPage((p) => Math.min(p + 1, totalPages - 1))}
               disabled={page >= totalPages - 1}
               className="px-2 py-1 border rounded hover:bg-gray-100 disabled:text-gray-400"
             >
@@ -356,7 +485,9 @@ const Products = () => {
         <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50 p-4">
           <div className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-lg overflow-y-auto max-h-screen">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold text-gray-800">Tambah Produk</h2>
+              <h2 className="text-2xl font-bold text-gray-800">
+                Tambah Produk
+              </h2>
               <button
                 onClick={() => setShowAddModal(false)}
                 className="text-gray-400 hover:text-gray-600 transition"
@@ -365,78 +496,28 @@ const Products = () => {
               </button>
             </div>
             <form onSubmit={handleAddSubmit} className="space-y-4">
-              <input type="file" name="photo" accept="image/*" onChange={handleAddChange} className="w-full border border-gray-300 p-2 rounded-lg focus:ring-2 focus:ring-green-500 outline-none" required />
-              <input type="text" name="name" value={newProduct.name} onChange={handleAddChange} placeholder="Nama Produk" className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 outline-none" required />
-              
-              <select 
-                name="type" 
-                value={newProduct.type} 
-                onChange={handleAddChange} 
-                className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
-                required
-              >
-                <option value="">Pilih Jenis Produk</option>
-                <option value="pria">Pria</option>
-                <option value="wanita">Wanita</option>
-                <option value="unisex">Unisex</option>
-              </select>
-
-              <input type="number" name="price" value={newProduct.price} onChange={handleAddChange} placeholder="Harga" className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 outline-none" required />
-              <input type="number" name="stock" value={newProduct.stock} onChange={handleAddChange} placeholder="Stok" className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 outline-none" required />
-              <textarea name="description" value={newProduct.description} onChange={handleAddChange} placeholder="Deskripsi" rows="4" className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 outline-none" required />
-              <div className="flex justify-end gap-3 mt-4">
-                <button type="button" onClick={() => setShowAddModal(false)} className="px-6 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition">Batal</button>
-                <button type="submit" className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">Simpan</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-      
-      {showEditModal && editingProduct && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50 p-4">
-          <div className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-lg overflow-y-auto max-h-screen">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold text-gray-800">Edit Produk</h2>
-              <button
-                onClick={() => setShowEditModal(false)}
-                className="text-gray-400 hover:text-gray-600 transition"
-              >
-                <XCircle className="w-7 h-7" />
-              </button>
-            </div>
-
-            <form onSubmit={handleEditSubmit} className="space-y-4">
-              {editingProduct.image_url && !(editingProduct.photo instanceof File) && (
-                <img
-                  src={`http://localhost:8000/images/products/${editingProduct.image_url}`}
-                  alt={editingProduct.name}
-                  className="w-24 h-24 object-cover rounded-lg mb-2"
-                />
-              )}
-
               <input
                 type="file"
                 name="photo"
                 accept="image/*"
-                onChange={handleEditChange}
-                className="w-full border border-gray-300 p-2 rounded-lg"
+                onChange={handleAddChange}
+                className="w-full border border-gray-300 p-2 rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
+                required
               />
-
               <input
                 type="text"
                 name="name"
-                value={editingProduct.name || ""}
-                onChange={handleEditChange}
+                value={newProduct.name}
+                onChange={handleAddChange}
                 placeholder="Nama Produk"
-                className="w-full border border-gray-300 p-3 rounded-lg"
+                className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
                 required
               />
 
-              <select 
-                name="type" 
-                value={editingProduct.type || ""} 
-                onChange={handleEditChange} 
+              <select
+                name="type"
+                value={newProduct.type}
+                onChange={handleAddChange}
                 className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
                 required
               >
@@ -449,37 +530,34 @@ const Products = () => {
               <input
                 type="number"
                 name="price"
-                value={editingProduct.price || ""}
-                onChange={handleEditChange}
+                value={newProduct.price}
+                onChange={handleAddChange}
                 placeholder="Harga"
-                className="w-full border border-gray-300 p-3 rounded-lg"
+                className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
                 required
               />
-
               <input
                 type="number"
                 name="stock"
-                value={editingProduct.stock || ""}
-                onChange={handleEditChange}
+                value={newProduct.stock}
+                onChange={handleAddChange}
                 placeholder="Stok"
-                className="w-full border border-gray-300 p-3 rounded-lg"
+                className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
                 required
               />
-
               <textarea
                 name="description"
-                value={editingProduct.description || ""}
-                onChange={handleEditChange}
+                value={newProduct.description}
+                onChange={handleAddChange}
                 placeholder="Deskripsi"
                 rows="4"
-                className="w-full border border-gray-300 p-3 rounded-lg"
+                className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
                 required
               />
-
               <div className="flex justify-end gap-3 mt-4">
                 <button
                   type="button"
-                  onClick={() => setShowEditModal(false)}
+                  onClick={() => setShowAddModal(false)}
                   className="px-6 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition"
                 >
                   Batal
@@ -488,7 +566,7 @@ const Products = () => {
                   type="submit"
                   className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
                 >
-                  Simpan Perubahan
+                  Simpan
                 </button>
               </div>
             </form>
@@ -496,23 +574,112 @@ const Products = () => {
         </div>
       )}
 
-      {showDeleteModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50">
-          <div className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-sm">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-gray-800">Konfirmasi Hapus</h2>
-              <button onClick={() => setShowDeleteModal(false)} className="text-gray-400 hover:text-gray-600 transition">
-                <XCircle className="w-6 h-6" />
-              </button>
-            </div>
-            <p className="text-gray-600 mb-6">Apakah Anda yakin ingin menghapus produk ini?</p>
-            <div className="flex justify-end gap-3">
-              <button type="button" onClick={() => setShowDeleteModal(false)} className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition">Batal</button>
-              <button type="button" onClick={confirmDelete} className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">Hapus</button>
-            </div>
-          </div>
-        </div>
-      )}
+     {showEditModal && editingProduct && (
+    <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50 p-4">
+        <div className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-lg overflow-y-auto max-h-screen">
+            <div className="flex justify-between items-center mb-4">
+                <h2 className="text-2xl font-bold text-gray-800">Edit Produk</h2>
+                <button
+                    onClick={() => setShowEditModal(false)}
+                    className="text-gray-400 hover:text-gray-600 transition"
+                >
+                    <XCircle className="w-7 h-7" />
+                </button>
+            </div>
+
+            {/* Tambahkan key prop di sini */}
+            <form key={editingProduct.id} onSubmit={handleEditSubmit} className="space-y-4">
+                {editingProduct.image_url &&
+                    !(editingProduct.photo instanceof File) && (
+                        <img
+                            src={`http://localhost:8000/images/products/${editingProduct.image_url}`}
+                            alt={editingProduct.name}
+                            className="w-24 h-24 object-cover rounded-lg mb-2"
+                        />
+                    )}
+
+                <input
+                    type="file"
+                    name="photo"
+                    accept="image/*"
+                    onChange={handleEditChange}
+                    className="w-full border border-gray-300 p-2 rounded-lg"
+                />
+
+                <input
+                    type="text"
+                    name="name"
+                    value={editingProduct.name || ""}
+                    onChange={handleEditChange}
+                    placeholder="Nama Produk"
+                    className="w-full border border-gray-300 p-3 rounded-lg"
+                    required
+                />
+
+                <select
+                    name="type"
+                    value={editingProduct.type || ""}
+                    onChange={handleEditChange}
+                    className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
+                    required
+                >
+                    <option value="">Pilih Jenis Produk</option>
+                    <option value="pria">Pria</option>
+                    <option value="wanita">Wanita</option>
+                    <option value="unisex">Unisex</option>
+                </select>
+
+                <input
+                    type="number"
+                    name="price"
+                    value={editingProduct.price || ""}
+                    onChange={handleEditChange}
+                    placeholder="Harga"
+                    className="w-full border border-gray-300 p-3 rounded-lg"
+                    required
+                />
+
+                <input
+                    type="number"
+                    name="stock"
+                    value={editingProduct.stock || ""}
+                    onChange={handleEditChange}
+                    placeholder="Stok"
+                    className="w-full border border-gray-300 p-3 rounded-lg"
+                    required
+                />
+
+                <textarea
+                    name="description"
+                    value={editingProduct.description || ""}
+                    onChange={handleEditChange}
+                    placeholder="Deskripsi"
+                    rows="4"
+                    className="w-full border border-gray-300 p-3 rounded-lg"
+                    required
+                />
+
+                <div className="flex justify-end gap-3 mt-4">
+                    <button
+                        type="button"
+                        onClick={() => setShowEditModal(false)}
+                        className="px-6 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition"
+                    >
+                        Batal
+                    </button>
+                    <button
+                        type="submit"
+                        className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+                    >
+                        Simpan Perubahan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+)}
+
+      
     </div>
   );
 };

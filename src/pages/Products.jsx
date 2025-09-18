@@ -3,6 +3,9 @@ import axios from "axios";
 import { Search, Edit, Trash2, PlusCircle, XCircle } from "lucide-react";
 
 const Products = () => {
+  
+  const authToken = localStorage.getItem("adminToken");
+  
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -20,6 +23,7 @@ const Products = () => {
     type: "",
     price: "",
     description: "",
+    stock: "",
     photo: null,
   });
   const [editingProduct, setEditingProduct] = useState(null);
@@ -28,15 +32,23 @@ const Products = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
+  const axiosHeaders = {
+    headers: {
+      Authorization: `Bearer ${authToken}`,
+    },
+  };
+
   const fetchProducts = async () => {
+    if (!authToken) return window.location.href = "/login"; // fallback
     setLoading(true);
     setError(null);
+
     try {
-      const response = await axios.get("http://localhost:8000/api/products");
+      const response = await axios.get("http://localhost:8000/api/products", axiosHeaders);
       const dataWithNo = Array.isArray(response.data.data) ? response.data.data.map((item, index) => ({ ...item, no: index + 1 })) : [];
       setProducts(dataWithNo);
     } catch (err) {
-      setError("Gagal memuat data. Pastikan server Laravel berjalan.");
+      setError("Gagal memuat data. Pastikan server Laravel berjalan dan token otorisasi valid.");
       console.error("Fetch error:", err);
     } finally {
       setLoading(false);
@@ -50,7 +62,7 @@ const Products = () => {
   const filteredItems = useMemo(() => {
     return products.filter((item) => {
       const matchText = JSON.stringify(item).toLowerCase().includes(filterText.toLowerCase());
-      const matchType = filterType === "Semua" || item.type === filterType;
+      const matchType = filterType === "Semua" || item.type.toLowerCase() === filterType.toLowerCase();
       return matchText && matchType;
     });
   }, [products, filterText, filterType]);
@@ -77,6 +89,7 @@ const Products = () => {
     formData.append("type", newProduct.type);
     formData.append("price", newProduct.price);
     formData.append("description", newProduct.description);
+    formData.append("stock", newProduct.stock);
     if (newProduct.photo) {
       formData.append("photo", newProduct.photo);
     }
@@ -84,15 +97,22 @@ const Products = () => {
     try {
       await axios.post("http://localhost:8000/api/products", formData, {
         headers: {
-          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${authToken}`,
         },
       });
       setShowAddModal(false);
-      setNewProduct({ name: "", type: "", price: "", description: "", photo: null });
+      setNewProduct({ name: "", type: "", price: "", description: "", stock: "", photo: null });
       fetchProducts();
     } catch (err) {
-      setError("Gagal menambahkan produk. Coba lagi.");
-      console.error("Add error:", err);
+      // Improved error handling for 422 validation errors
+      if (err.response && err.response.status === 422) {
+        const validationErrors = err.response.data.errors;
+        const errorMessages = Object.values(validationErrors).flat();
+        setError(`Gagal menambahkan produk. Periksa input Anda: ${errorMessages.join(", ")}`);
+      } else {
+        setError("Gagal menambahkan produk. Coba lagi.");
+        console.error("Add error:", err);
+      }
     }
   };
 
@@ -114,6 +134,7 @@ const Products = () => {
     formData.append("type", editingProduct.type);
     formData.append("price", editingProduct.price);
     formData.append("description", editingProduct.description);
+    formData.append("stock", editingProduct.stock);
     if (editingProduct.photo instanceof File) {
       formData.append("photo", editingProduct.photo);
     }
@@ -121,15 +142,22 @@ const Products = () => {
     try {
       await axios.post(`http://localhost:8000/api/products/${editingProduct.id}`, formData, {
         headers: {
-          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${authToken}`,
         },
       });
       setShowEditModal(false);
       setEditingProduct(null);
       fetchProducts();
     } catch (err) {
-      setError("Gagal memperbarui produk. Coba lagi.");
-      console.error("Edit error:", err);
+      // Improved error handling for 422 validation errors
+      if (err.response && err.response.status === 422) {
+        const validationErrors = err.response.data.errors;
+        const errorMessages = Object.values(validationErrors).flat();
+        setError(`Gagal memperbarui produk. Periksa input Anda: ${errorMessages.join(", ")}`);
+      } else {
+        setError("Gagal memperbarui produk. Coba lagi.");
+        console.error("Edit error:", err);
+      }
     }
   };
 
@@ -141,7 +169,7 @@ const Products = () => {
 
   const confirmDelete = async () => {
     try {
-      await axios.delete(`http://localhost:8000/api/products/${deleteProductId}`);
+      await axios.delete(`http://localhost:8000/api/products/${deleteProductId}`, axiosHeaders);
       setShowDeleteModal(false);
       setDeleteProductId(null);
       fetchProducts();
@@ -161,6 +189,7 @@ const Products = () => {
             <th className="py-3 px-4">Nama</th>
             <th className="py-3 px-4">Jenis</th>
             <th className="py-3 px-4">Harga</th>
+            <th className="py-3 px-4">Stok</th>
             <th className="py-3 px-4">Deskripsi</th>
             <th className="py-3 px-4">Aksi</th>
           </tr>
@@ -173,6 +202,7 @@ const Products = () => {
               <td className="py-3 px-4"><div className="h-4 bg-gray-200 rounded w-3/4"></div></td>
               <td className="py-3 px-4"><div className="h-4 bg-gray-200 rounded w-1/2"></div></td>
               <td className="py-3 px-4"><div className="h-4 bg-gray-200 rounded w-2/3"></div></td>
+              <td className="py-3 px-4"><div className="h-4 bg-gray-200 rounded w-1/4"></div></td>
               <td className="py-3 px-4"><div className="h-4 bg-gray-200 rounded w-full"></div></td>
               <td className="py-3 px-4 flex items-center gap-2">
                 <div className="h-6 w-16 bg-gray-200 rounded-lg"></div>
@@ -181,7 +211,7 @@ const Products = () => {
             </tr>
           ))}
         </tbody>
-      </table>
+        </table>
     </div>
   );
 
@@ -215,9 +245,9 @@ const Products = () => {
               className="border border-gray-300 px-4 py-2 rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
             >
               <option value="Semua">Semua Jenis</option>
-              {useMemo(() => [...new Set(products.map(p => p.type))], [products]).map(type => (
-                <option key={type} value={type}>{type}</option>
-              ))}
+              <option value="pria">Pria</option>
+              <option value="wanita">Wanita</option>
+              <option value="unisex">Unisex</option>
             </select>
           </div>
           <button
@@ -243,6 +273,7 @@ const Products = () => {
                   <th className="py-3 px-4">Nama</th>
                   <th className="py-3 px-4">Jenis</th>
                   <th className="py-3 px-4">Harga</th>
+                  <th className="py-3 px-4">Stok</th>
                   <th className="py-3 px-4">Deskripsi</th>
                   <th className="py-3 px-4">Aksi</th>
                 </tr>
@@ -263,6 +294,7 @@ const Products = () => {
                     <td className="py-3 px-4">{p.name}</td>
                     <td className="py-3 px-4">{p.type}</td>
                     <td className="py-3 px-4">IDR {p.price ? p.price.toLocaleString("id-ID") : '-'}</td>
+                    <td className="py-3 px-4">{p.stock || 'N/A'}</td>
                     <td className="py-3 px-4 text-gray-600">
                       {p.description && p.description.length > 30 ? `${p.description.substring(0, 30)}...` : p.description}
                     </td>
@@ -335,8 +367,22 @@ const Products = () => {
             <form onSubmit={handleAddSubmit} className="space-y-4">
               <input type="file" name="photo" accept="image/*" onChange={handleAddChange} className="w-full border border-gray-300 p-2 rounded-lg focus:ring-2 focus:ring-green-500 outline-none" required />
               <input type="text" name="name" value={newProduct.name} onChange={handleAddChange} placeholder="Nama Produk" className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 outline-none" required />
-              <input type="text" name="type" value={newProduct.type} onChange={handleAddChange} placeholder="Jenis Produk" className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 outline-none" required />
+              
+              <select 
+                name="type" 
+                value={newProduct.type} 
+                onChange={handleAddChange} 
+                className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
+                required
+              >
+                <option value="">Pilih Jenis Produk</option>
+                <option value="pria">Pria</option>
+                <option value="wanita">Wanita</option>
+                <option value="unisex">Unisex</option>
+              </select>
+
               <input type="number" name="price" value={newProduct.price} onChange={handleAddChange} placeholder="Harga" className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 outline-none" required />
+              <input type="number" name="stock" value={newProduct.stock} onChange={handleAddChange} placeholder="Stok" className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 outline-none" required />
               <textarea name="description" value={newProduct.description} onChange={handleAddChange} placeholder="Deskripsi" rows="4" className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 outline-none" required />
               <div className="flex justify-end gap-3 mt-4">
                 <button type="button" onClick={() => setShowAddModal(false)} className="px-6 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition">Batal</button>
@@ -387,15 +433,18 @@ const Products = () => {
                 required
               />
 
-              <input
-                type="text"
-                name="type"
-                value={editingProduct.type || ""}
-                onChange={handleEditChange}
-                placeholder="Jenis Produk"
-                className="w-full border border-gray-300 p-3 rounded-lg"
+              <select 
+                name="type" 
+                value={editingProduct.type || ""} 
+                onChange={handleEditChange} 
+                className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
                 required
-              />
+              >
+                <option value="">Pilih Jenis Produk</option>
+                <option value="pria">Pria</option>
+                <option value="wanita">Wanita</option>
+                <option value="unisex">Unisex</option>
+              </select>
 
               <input
                 type="number"
@@ -403,6 +452,16 @@ const Products = () => {
                 value={editingProduct.price || ""}
                 onChange={handleEditChange}
                 placeholder="Harga"
+                className="w-full border border-gray-300 p-3 rounded-lg"
+                required
+              />
+
+              <input
+                type="number"
+                name="stock"
+                value={editingProduct.stock || ""}
+                onChange={handleEditChange}
+                placeholder="Stok"
                 className="w-full border border-gray-300 p-3 rounded-lg"
                 required
               />

@@ -1,4 +1,4 @@
-import { Search, Edit, XCircle } from "lucide-react";
+import { Search, Edit, XCircle, Info, StepForward } from "lucide-react";
 import { useState, useEffect } from "react";
 
 const Orders = () => {
@@ -223,7 +223,7 @@ const Orders = () => {
                           onClick={() => handleEdit(o)}
                           className="bg-blue-100 text-blue-700 font-semibold px-3 py-1.5 rounded-lg hover:bg-blue-200 transition flex items-center"
                         >
-                          <Edit className="w-4 h-4 mr-1" /> Edit
+                          <StepForward className="w-4 h-4 mr-1" /> Ubah Status
                         </button>
                       </td>
                     </tr>
@@ -321,3 +321,5 @@ const Orders = () => {
 };
 
 export default Orders;
+
+

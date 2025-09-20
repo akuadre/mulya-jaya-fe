@@ -2,27 +2,22 @@ import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import { Search, Edit, Trash2, PlusCircle, XCircle } from "lucide-react";
 
-// Import SweetAlert2
-import Swal from "sweetalert2";
-import withReactContent from "sweetalert2-react-content";
-
-const MySwal = withReactContent(Swal);
-
 const Products = () => {
   const authToken = localStorage.getItem("adminToken");
 
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [filterText, setFilterText] = useState("");
   const [filterType, setFilterType] = useState("Semua");
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+  const [productIdToDelete, setProductIdToDelete] = useState(null);
 
-  const [deleteProductId, setDeleteProductId] = useState(null);
   const [newProduct, setNewProduct] = useState({
     name: "",
     type: "",
@@ -32,6 +27,19 @@ const Products = () => {
     photo: null,
   });
   const [editingProduct, setEditingProduct] = useState(null);
+
+  // Custom modal for success/error messages
+  const [showMsgModal, setShowMsgModal] = useState(false);
+  const [msgTitle, setMsgTitle] = useState('');
+  const [msgText, setMsgText] = useState('');
+  const [msgIcon, setMsgIcon] = useState('success');
+
+  const showMessage = (icon, title, text) => {
+    setMsgIcon(icon);
+    setMsgTitle(title);
+    setMsgText(text);
+    setShowMsgModal(true);
+  };
 
   // Pagination
   const [page, setPage] = useState(0);
@@ -44,7 +52,7 @@ const Products = () => {
   };
 
   const fetchProducts = async () => {
-    if (!authToken) return (window.location.href = "/login"); // fallback
+    if (!authToken) return (window.location.href = "/login");
     setLoading(true);
     setError(null);
 
@@ -103,6 +111,7 @@ const Products = () => {
 
   const handleAddSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
     const formData = new FormData();
     formData.append("name", newProduct.name);
     formData.append("type", newProduct.type);
@@ -129,33 +138,18 @@ const Products = () => {
         photo: null,
       });
       fetchProducts();
-      // SweetAlert for success
-      MySwal.fire({
-        icon: "success",
-        title: "Berhasil!",
-        text: "Produk berhasil ditambahkan.",
-        timer: 2000,
-        showConfirmButton: false,
-      });
+      showMessage('success', 'Berhasil!', 'Produk berhasil ditambahkan.');
     } catch (err) {
       if (err.response && err.response.status === 422) {
         const validationErrors = err.response.data.errors;
         const errorMessages = Object.values(validationErrors).flat();
-        MySwal.fire({
-          icon: "error",
-          title: "Gagal!",
-          text: `Gagal menambahkan produk. Periksa input Anda: ${errorMessages.join(
-            ", "
-          )}`,
-        });
+        showMessage('error', 'Gagal!', `Gagal menambahkan produk. Periksa input Anda: ${errorMessages.join(", ")}`);
       } else {
-        MySwal.fire({
-          icon: "error",
-          title: "Gagal!",
-          text: "Gagal menambahkan produk. Coba lagi.",
-        });
+        showMessage('error', 'Gagal!', 'Gagal menambahkan produk. Coba lagi.');
         console.error("Add error:", err);
       }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -171,6 +165,7 @@ const Products = () => {
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
     const formData = new FormData();
     formData.append("_method", "PUT");
     formData.append("name", editingProduct.name);
@@ -195,77 +190,44 @@ const Products = () => {
       setShowEditModal(false);
       setEditingProduct(null);
       fetchProducts();
-      // SweetAlert for success
-      MySwal.fire({
-        icon: "success",
-        title: "Berhasil!",
-        text: "Produk berhasil diperbarui.",
-        timer: 2000,
-        showConfirmButton: false,
-      });
+      showMessage('success', 'Berhasil!', 'Produk berhasil diperbarui.');
     } catch (err) {
       if (err.response && err.response.status === 422) {
         const validationErrors = err.response.data.errors;
         const errorMessages = Object.values(validationErrors).flat();
-        MySwal.fire({
-          icon: "error",
-          title: "Gagal!",
-          text: `Gagal memperbarui produk. Periksa input Anda: ${errorMessages.join(
-            ", "
-          )}`,
-        });
+        showMessage('error', 'Gagal!', `Gagal memperbarui produk. Periksa input Anda: ${errorMessages.join(", ")}`);
       } else {
-        MySwal.fire({
-          icon: "error",
-          title: "Gagal!",
-          text: "Gagal memperbarui produk. Coba lagi.",
-        });
+        showMessage('error', 'Gagal!', 'Gagal memperbarui produk. Coba lagi.');
         console.error("Edit error:", err);
       }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   // Handle deleting a product
   const handleDelete = (id) => {
-    MySwal.fire({
-      title: "Konfirmasi Hapus",
-      text: "Apakah Anda yakin ingin menghapus produk ini?",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#d33",
-      cancelButtonColor: "#6c757d",
-      confirmButtonText: "Ya, Hapus!",
-      cancelButtonText: "Batal",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        confirmDelete(id);
-      }
-    });
+    setProductIdToDelete(id);
+    setShowDeleteConfirmModal(true);
   };
 
-  const confirmDelete = async (id) => {
+  const confirmDelete = async () => {
+    setIsSubmitting(true);
     try {
       await axios.delete(
-        `http://localhost:8000/api/products/${id}`,
+        `http://localhost:8000/api/products/${productIdToDelete}`,
         axiosHeaders
       );
-      setDeleteProductId(null);
+      setProductIdToDelete(null);
+      setShowDeleteConfirmModal(false);
       fetchProducts();
-      // SweetAlert for success
-      MySwal.fire({
-        icon: "success",
-        title: "Dihapus!",
-        text: "Produk berhasil dihapus.",
-        timer: 2000,
-        showConfirmButton: false,
-      });
+      showMessage('success', 'Dihapus!', 'Produk berhasil dihapus.');
     } catch (err) {
-      MySwal.fire({
-        icon: "error",
-        title: "Gagal!",
-        text: "Gagal menghapus produk. Coba lagi.",
-      });
+      setShowDeleteConfirmModal(false);
+      showMessage('error', 'Gagal!', 'Gagal menghapus produk. Coba lagi.');
       console.error("Delete error:", err);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -356,7 +318,8 @@ const Products = () => {
           </div>
           <button
             onClick={() => setShowAddModal(true)}
-            className="bg-green-600 text-white px-4 py-3 rounded-lg hover:bg-green-700 transition flex items-center shadow-md"
+            className="bg-green-600 text-white px-4 py-3 rounded-lg hover:bg-green-700 transition flex items-center shadow-md disabled:bg-gray-400 disabled:cursor-not-allowed"
+            disabled={isSubmitting}
           >
             <PlusCircle className="w-5 h-5 mr-1" />
             <span className="w-30">Tambah Produk</span>
@@ -423,13 +386,15 @@ const Products = () => {
                               setEditingProduct(p);
                               setShowEditModal(true);
                             }}
-                            className="bg-blue-100 text-blue-700 font-semibold px-3 py-1.5 rounded-lg hover:bg-blue-200 transition flex items-center"
+                            className="bg-blue-100 text-blue-700 font-semibold px-3 py-1.5 rounded-lg hover:bg-blue-200 transition flex items-center disabled:bg-gray-400 disabled:cursor-not-allowed"
+                            disabled={isSubmitting}
                           >
                             <Edit className="w-4 h-4 mr-1" /> Edit
                           </button>
                           <button
                             onClick={() => handleDelete(p.id)}
-                            className="bg-red-100 text-red-700 font-semibold px-3 py-1.5 rounded-lg hover:bg-red-200 transition flex items-center"
+                            className="bg-red-100 text-red-700 font-semibold px-3 py-1.5 rounded-lg hover:bg-red-200 transition flex items-center disabled:bg-gray-400 disabled:cursor-not-allowed"
+                            disabled={isSubmitting}
                           >
                             <Trash2 className="w-4 h-4 mr-1" /> Hapus
                           </button>
@@ -564,9 +529,10 @@ const Products = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+                  className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  disabled={isSubmitting}
                 >
-                  Simpan
+                  {isSubmitting ? "Menyimpan..." : "Simpan"}
                 </button>
               </div>
             </form>
@@ -574,112 +540,159 @@ const Products = () => {
         </div>
       )}
 
-     {showEditModal && editingProduct && (
-    <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50 p-4">
-        <div className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-lg overflow-y-auto max-h-screen">
-            <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-bold text-gray-800">Edit Produk</h2>
-                <button
-                    onClick={() => setShowEditModal(false)}
-                    className="text-gray-400 hover:text-gray-600 transition"
-                >
-                    <XCircle className="w-7 h-7" />
-                </button>
-            </div>
+      {showEditModal && editingProduct && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50 p-4">
+          <div className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-lg overflow-y-auto max-h-screen">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold text-gray-800">Edit Produk</h2>
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="text-gray-400 hover:text-gray-600 transition"
+              >
+                <XCircle className="w-7 h-7" />
+              </button>
+            </div>
 
-            {/* Tambahkan key prop di sini */}
-            <form key={editingProduct.id} onSubmit={handleEditSubmit} className="space-y-4">
-                {editingProduct.image_url &&
-                    !(editingProduct.photo instanceof File) && (
-                        <img
-                            src={`http://localhost:8000/images/products/${editingProduct.image_url}`}
-                            alt={editingProduct.name}
-                            className="w-24 h-24 object-cover rounded-lg mb-2"
-                        />
-                    )}
+            <form key={editingProduct.id} onSubmit={handleEditSubmit} className="space-y-4">
+              {editingProduct.image_url &&
+                !(editingProduct.photo instanceof File) && (
+                  <img
+                    src={`http://localhost:8000/images/products/${editingProduct.image_url}`}
+                    alt={editingProduct.name}
+                    className="w-24 h-24 object-cover rounded-lg mb-2"
+                  />
+                )}
 
-                <input
-                    type="file"
-                    name="photo"
-                    accept="image/*"
-                    onChange={handleEditChange}
-                    className="w-full border border-gray-300 p-2 rounded-lg"
-                />
+              <input
+                type="file"
+                name="photo"
+                accept="image/*"
+                onChange={handleEditChange}
+                className="w-full border border-gray-300 p-2 rounded-lg"
+              />
 
-                <input
-                    type="text"
-                    name="name"
-                    value={editingProduct.name || ""}
-                    onChange={handleEditChange}
-                    placeholder="Nama Produk"
-                    className="w-full border border-gray-300 p-3 rounded-lg"
-                    required
-                />
+              <input
+                type="text"
+                name="name"
+                value={editingProduct.name || ""}
+                onChange={handleEditChange}
+                placeholder="Nama Produk"
+                className="w-full border border-gray-300 p-3 rounded-lg"
+                required
+              />
 
-                <select
-                    name="type"
-                    value={editingProduct.type || ""}
-                    onChange={handleEditChange}
-                    className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
-                    required
-                >
-                    <option value="">Pilih Jenis Produk</option>
-                    <option value="pria">Pria</option>
-                    <option value="wanita">Wanita</option>
-                    <option value="unisex">Unisex</option>
-                </select>
+              <select
+                name="type"
+                value={editingProduct.type ? editingProduct.type.toLowerCase() : ""}
+                onChange={handleEditChange}
+                className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
+                required
+              >
+                <option value="">Pilih Jenis Produk</option>
+                <option value="pria">Pria</option>
+                <option value="wanita">Wanita</option>
+                <option value="unisex">Unisex</option>
+              </select>
 
-                <input
-                    type="number"
-                    name="price"
-                    value={editingProduct.price || ""}
-                    onChange={handleEditChange}
-                    placeholder="Harga"
-                    className="w-full border border-gray-300 p-3 rounded-lg"
-                    required
-                />
+              <input
+                type="number"
+                name="price"
+                value={editingProduct.price || ""}
+                onChange={handleEditChange}
+                placeholder="Harga"
+                className="w-full border border-gray-300 p-3 rounded-lg"
+                required
+              />
 
-                <input
-                    type="number"
-                    name="stock"
-                    value={editingProduct.stock || ""}
-                    onChange={handleEditChange}
-                    placeholder="Stok"
-                    className="w-full border border-gray-300 p-3 rounded-lg"
-                    required
-                />
+              <input
+                type="number"
+                name="stock"
+                value={editingProduct.stock || ""}
+                onChange={handleEditChange}
+                placeholder="Stok"
+                className="w-full border border-gray-300 p-3 rounded-lg"
+                required
+              />
 
-                <textarea
-                    name="description"
-                    value={editingProduct.description || ""}
-                    onChange={handleEditChange}
-                    placeholder="Deskripsi"
-                    rows="4"
-                    className="w-full border border-gray-300 p-3 rounded-lg"
-                    required
-                />
+              <textarea
+                name="description"
+                value={editingProduct.description || ""}
+                onChange={handleEditChange}
+                placeholder="Deskripsi"
+                rows="4"
+                className="w-full border border-gray-300 p-3 rounded-lg"
+                required
+              />
 
-                <div className="flex justify-end gap-3 mt-4">
-                    <button
-                        type="button"
-                        onClick={() => setShowEditModal(false)}
-                        className="px-6 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition"
-                    >
-                        Batal
-                    </button>
-                    <button
-                        type="submit"
-                        className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
-                    >
-                        Simpan Perubahan
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-)}
+              <div className="flex justify-end gap-3 mt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowEditModal(false)}
+                  className="px-6 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Menyimpan..." : "Simpan Perubahan"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
-      
+      {showDeleteConfirmModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50 p-4">
+          <div className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-sm text-center">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">Konfirmasi Hapus</h2>
+            <p className="text-gray-600 mb-6">Apakah Anda yakin ingin menghapus produk ini?</p>
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={() => setShowDeleteConfirmModal(false)}
+                className="px-6 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition"
+                disabled={isSubmitting}
+              >
+                Batal
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Menghapus..." : "Ya, Hapus!"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showMsgModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50 p-4">
+          <div className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-sm text-center">
+            {msgIcon === 'success' ? (
+              <svg className="mx-auto w-16 h-16 text-green-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            ) : (
+              <svg className="mx-auto w-16 h-16 text-red-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            )}
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">{msgTitle}</h2>
+            <p className="text-gray-600 mb-6">{msgText}</p>
+            <button
+              onClick={() => setShowMsgModal(false)}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+            >
+              Tutup
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

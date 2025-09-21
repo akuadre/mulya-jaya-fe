@@ -130,7 +130,7 @@ const Dashboard = () => {
     <table className="w-full text-sm animate-pulse">
       <thead>
         <tr className="w-full text-left text-gray-500 uppercase text-sm border-b-2 border-gray-200">
-          <th className="py-2 px-3 text-left w-1/6">Number</th>
+          <th className="py-2 px-3 text-left w-1/12">No</th>
           <th className="py-2 px-3 text-left w-1/6">Product</th>
           <th className="py-2 px-3 text-left w-1/6">Name</th>
           <th className="py-2 px-3 text-left w-1/6">Date</th>
@@ -189,7 +189,7 @@ const Dashboard = () => {
             <table className="w-full text-sm">
               <thead>
                 <tr className="w-full text-left text-gray-500 uppercase text-sm border-b-2 border-gray-200">
-                  <th className="py-2 px-3 text-left">Number</th>
+                  <th className="py-2 px-3 text-left">No</th>
                   <th className="py-2 px-3 text-left">Product</th>
                   <th className="py-2 px-3 text-left">Name</th>
                   <th className="py-2 px-3 text-left">Date</th>

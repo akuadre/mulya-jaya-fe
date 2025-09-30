@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import { Search, Edit, Trash2, PlusCircle, XCircle } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion"; // <-- Import Framer Motion
 
 const Products = () => {
+  // ... (Semua state dan fungsi Anda dari baris 6 sampai 271 tetap sama)
   const authToken = localStorage.getItem("adminToken");
 
   const [products, setProducts] = useState([]);
@@ -232,6 +234,7 @@ const Products = () => {
   };
 
   const LoadingTable = () => (
+    // ... (Komponen LoadingTable Anda tetap sama)
     <div className="overflow-x-auto text-base">
       <table className="w-full text-sm border-collapse animate-pulse">
         <thead className="bg-gray-50">
@@ -281,51 +284,74 @@ const Products = () => {
     </div>
   );
 
+  // --- Varian Animasi ---
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1 },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: { y: 0, opacity: 1 },
+  };
+
   return (
-    <div className="bg-gray-100 min-h-screen font-sans p-4 sm:p-6">
-      <div className="bg-white shadow-lg rounded-lg p-6 max-w-7xl mx-auto">
-        <div className="mb-4 border-b pb-4">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">
-            Manajemen Produk
-          </h1>
-          <p className="text-gray-600 text-sm mt-1">
-            Kelola daftar produk Anda di halaman ini.
-          </p>
-        </div>
+    // PERUBAHAN 1: Hapus div terluar dan ganti dengan motion.div
+    <motion.div
+      className="bg-white shadow-lg rounded-lg p-6 max-w-7xl mx-auto"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
+      <motion.div variants={itemVariants} className="mb-4 border-b pb-4">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">
+          Manajemen Produk
+        </h1>
+        <p className="text-gray-600 text-sm mt-1">
+          Kelola daftar produk Anda di halaman ini.
+        </p>
+      </motion.div>
 
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-          <div className="flex flex-col md:flex-row gap-3 w-full">
-            <div className="relative w-full md:w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Cari produk..."
-                value={filterText}
-                onChange={(e) => setFilterText(e.target.value)}
-                className="pl-10 pr-4 py-2 border rounded-lg w-full focus:ring-2 focus:ring-green-500 outline-none"
-              />
-            </div>
-            <select
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value)}
-              className="border border-gray-300 px-4 py-2 rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
-            >
-              <option value="Semua">Semua Jenis</option>
-              <option value="pria">Pria</option>
-              <option value="wanita">Wanita</option>
-              <option value="unisex">Unisex</option>
-            </select>
+      <motion.div
+        variants={itemVariants}
+        className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6"
+      >
+        <div className="flex flex-col md:flex-row gap-3 w-full">
+          <div className="relative w-full md:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Cari produk..."
+              value={filterText}
+              onChange={(e) => setFilterText(e.target.value)}
+              className="pl-10 pr-4 py-2 border rounded-lg w-full focus:ring-2 focus:ring-green-500 outline-none"
+            />
           </div>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="bg-green-600 text-white px-4 py-3 rounded-lg hover:bg-green-700 transition flex items-center shadow-md disabled:bg-gray-400 disabled:cursor-not-allowed"
-            disabled={isSubmitting}
+          <select
+            value={filterType}
+            onChange={(e) => setFilterType(e.target.value)}
+            className="border border-gray-300 px-4 py-2 rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
           >
-            <PlusCircle className="w-5 h-5 mr-1" />
-            <span className="w-30">Tambah Produk</span>
-          </button>
+            <option value="Semua">Semua Jenis</option>
+            <option value="pria">Pria</option>
+            <option value="wanita">Wanita</option>
+            <option value="unisex">Unisex</option>
+          </select>
         </div>
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="bg-green-600 text-white px-4 py-3 rounded-lg hover:bg-green-700 transition flex items-center justify-center shadow-md disabled:bg-gray-400 disabled:cursor-not-allowed"
+          disabled={isSubmitting}
+        >
+          <PlusCircle className="w-5 h-5 mr-1" />
+          <span className="w-30">Tambah Produk</span>
+        </button>
+      </motion.div>
 
+      <motion.div variants={itemVariants}>
         {loading ? (
           <LoadingTable />
         ) : error ? (
@@ -406,294 +432,343 @@ const Products = () => {
             </table>
           </div>
         )}
+      </motion.div>
 
-        <div className="flex justify-between items-center p-2 text-sm text-gray-600 border-t mt-4">
-          <div className="flex items-center gap-2">
-            <span>Baris per halaman:</span>
-            <select
-              value={rowsPerPage}
-              onChange={(e) => {
-                setRowsPerPage(Number(e.target.value));
-                setPage(0);
-              }}
-              className="px-1 py-0 bg-transparent focus:outline-none border rounded"
-            >
-              <option value={5}>5</option>
-              <option value={10}>10</option>
-              <option value={25}>25</option>
-            </select>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setPage((p) => Math.max(p - 1, 0))}
-              disabled={page === 0}
-              className="px-2 py-1 border rounded hover:bg-gray-100 disabled:text-gray-400"
-            >
-              Sebelumnya
-            </button>
-            <span>
-              {startIndex + 1}-{Math.min(endIndex, filteredItems.length)} dari{" "}
-              {filteredItems.length}
-            </span>
-            <button
-              onClick={() => setPage((p) => Math.min(p + 1, totalPages - 1))}
-              disabled={page >= totalPages - 1}
-              className="px-2 py-1 border rounded hover:bg-gray-100 disabled:text-gray-400"
-            >
-              Berikutnya
-            </button>
-          </div>
+      <motion.div
+        variants={itemVariants}
+        className="flex justify-between items-center p-2 text-sm text-gray-600 border-t mt-4"
+      >
+        <div className="flex items-center gap-2">
+          <span>Baris per halaman:</span>
+          <select
+            value={rowsPerPage}
+            onChange={(e) => {
+              setRowsPerPage(Number(e.target.value));
+              setPage(0);
+            }}
+            className="px-1 py-0 bg-transparent focus:outline-none border rounded"
+          >
+            <option value={5}>5</option>
+            <option value={10}>10</option>
+            <option value={25}>25</option>
+          </select>
         </div>
-      </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setPage((p) => Math.max(p - 1, 0))}
+            disabled={page === 0}
+            className="px-2 py-1 border rounded hover:bg-gray-100 disabled:text-gray-400"
+          >
+            Sebelumnya
+          </button>
+          <span>
+            {startIndex + 1}-{Math.min(endIndex, filteredItems.length)} dari{" "}
+            {filteredItems.length}
+          </span>
+          <button
+            onClick={() => setPage((p) => Math.min(p + 1, totalPages - 1))}
+            disabled={page >= totalPages - 1}
+            className="px-2 py-1 border rounded hover:bg-gray-100 disabled:text-gray-400"
+          >
+            Berikutnya
+          </button>
+        </div>
+      </motion.div>
 
-      {showAddModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50 p-4">
-          <div className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-lg overflow-y-auto max-h-screen">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold text-gray-800">
-                Tambah Produk
-              </h2>
-              <button
-                onClick={() => setShowAddModal(false)}
-                className="text-gray-400 hover:text-gray-600 transition"
-              >
-                <XCircle className="w-7 h-7" />
-              </button>
-            </div>
-            <form onSubmit={handleAddSubmit} className="space-y-4">
-              <input
-                type="file"
-                name="photo"
-                accept="image/*"
-                onChange={handleAddChange}
-                className="w-full border border-gray-300 p-2 rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
-                required
-              />
-              <input
-                type="text"
-                name="name"
-                value={newProduct.name}
-                onChange={handleAddChange}
-                placeholder="Nama Produk"
-                className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
-                required
-              />
-
-              <select
-                name="type"
-                value={newProduct.type}
-                onChange={handleAddChange}
-                className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
-                required
-              >
-                <option value="">Pilih Jenis Produk</option>
-                <option value="pria">Pria</option>
-                <option value="wanita">Wanita</option>
-                <option value="unisex">Unisex</option>
-              </select>
-
-              <input
-                type="number"
-                name="price"
-                value={newProduct.price}
-                onChange={handleAddChange}
-                placeholder="Harga"
-                className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
-                required
-              />
-              <input
-                type="number"
-                name="stock"
-                value={newProduct.stock}
-                onChange={handleAddChange}
-                placeholder="Stok"
-                className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
-                required
-              />
-              <textarea
-                name="description"
-                value={newProduct.description}
-                onChange={handleAddChange}
-                placeholder="Deskripsi"
-                rows="4"
-                className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
-                required
-              />
-              <div className="flex justify-end gap-3 mt-4">
+      {/* --- MODALS SECTION --- */}
+      {/* PERUBAHAN 2: Bungkus semua modal dengan AnimatePresence */}
+      <AnimatePresence>
+        {showAddModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 flex items-center justify-center bg-black/70 z-50 p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-lg overflow-y-auto max-h-screen"
+            >
+              {/* Konten modal Tambah Anda */}
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-2xl font-bold text-gray-800">
+                  Tambah Produk
+                </h2>
                 <button
-                  type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="px-6 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition"
+                  className="text-gray-400 hover:text-gray-600 transition"
                 >
-                  Batal
-                </button>
-                <button
-                  type="submit"
-                  className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? "Menyimpan..." : "Simpan"}
+                  <XCircle className="w-7 h-7" />
                 </button>
               </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {showEditModal && editingProduct && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50 p-4">
-          <div className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-lg overflow-y-auto max-h-screen">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold text-gray-800">Edit Produk</h2>
-              <button
-                onClick={() => setShowEditModal(false)}
-                className="text-gray-400 hover:text-gray-600 transition"
-              >
-                <XCircle className="w-7 h-7" />
-              </button>
-            </div>
-
-            <form key={editingProduct.id} onSubmit={handleEditSubmit} className="space-y-4">
-              {editingProduct.image_url &&
-                !(editingProduct.photo instanceof File) && (
-                  <img
-                    src={`http://localhost:8000/images/products/${editingProduct.image_url}`}
-                    alt={editingProduct.name}
-                    className="w-24 h-24 object-cover rounded-lg mb-2"
-                  />
-                )}
-
-              <input
-                type="file"
-                name="photo"
-                accept="image/*"
-                onChange={handleEditChange}
-                className="w-full border border-gray-300 p-2 rounded-lg"
-              />
-
-              <input
-                type="text"
-                name="name"
-                value={editingProduct.name || ""}
-                onChange={handleEditChange}
-                placeholder="Nama Produk"
-                className="w-full border border-gray-300 p-3 rounded-lg"
-                required
-              />
-
-              <select
-                name="type"
-                value={editingProduct.type ? editingProduct.type.toLowerCase() : ""}
-                onChange={handleEditChange}
-                className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
-                required
-              >
-                <option value="">Pilih Jenis Produk</option>
-                <option value="pria">Pria</option>
-                <option value="wanita">Wanita</option>
-                <option value="unisex">Unisex</option>
-              </select>
-
-              <input
-                type="number"
-                name="price"
-                value={editingProduct.price || ""}
-                onChange={handleEditChange}
-                placeholder="Harga"
-                className="w-full border border-gray-300 p-3 rounded-lg"
-                required
-              />
-
-              <input
-                type="number"
-                name="stock"
-                value={editingProduct.stock || ""}
-                onChange={handleEditChange}
-                placeholder="Stok"
-                className="w-full border border-gray-300 p-3 rounded-lg"
-                required
-              />
-
-              <textarea
-                name="description"
-                value={editingProduct.description || ""}
-                onChange={handleEditChange}
-                placeholder="Deskripsi"
-                rows="4"
-                className="w-full border border-gray-300 p-3 rounded-lg"
-                required
-              />
-
-              <div className="flex justify-end gap-3 mt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowEditModal(false)}
-                  className="px-6 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition"
+              <form onSubmit={handleAddSubmit} className="space-y-4">
+                <input
+                  type="file"
+                  name="photo"
+                  accept="image/*"
+                  onChange={handleAddChange}
+                  className="w-full border border-gray-300 p-2 rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
+                  required
+                />
+                <input
+                  type="text"
+                  name="name"
+                  value={newProduct.name}
+                  onChange={handleAddChange}
+                  placeholder="Nama Produk"
+                  className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
+                  required
+                />
+                <select
+                  name="type"
+                  value={newProduct.type}
+                  onChange={handleAddChange}
+                  className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
+                  required
                 >
-                  Batal
-                </button>
-                <button
-                  type="submit"
-                  className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? "Menyimpan..." : "Simpan Perubahan"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+                  <option value="">Pilih Jenis Produk</option>
+                  <option value="pria">Pria</option>
+                  <option value="wanita">Wanita</option>
+                  <option value="unisex">Unisex</option>
+                </select>
+                <input
+                  type="number"
+                  name="price"
+                  value={newProduct.price}
+                  onChange={handleAddChange}
+                  placeholder="Harga"
+                  className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
+                  required
+                />
+                <input
+                  type="number"
+                  name="stock"
+                  value={newProduct.stock}
+                  onChange={handleAddChange}
+                  placeholder="Stok"
+                  className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
+                  required
+                />
+                <textarea
+                  name="description"
+                  value={newProduct.description}
+                  onChange={handleAddChange}
+                  placeholder="Deskripsi"
+                  rows="4"
+                  className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
+                  required
+                />
+                <div className="flex justify-end gap-3 mt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddModal(false)}
+                    className="px-6 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? "Menyimpan..." : "Simpan"}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
 
-      {showDeleteConfirmModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50 p-4">
-          <div className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-sm text-center">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Konfirmasi Hapus</h2>
-            <p className="text-gray-600 mb-6">Apakah Anda yakin ingin menghapus produk ini?</p>
-            <div className="flex justify-center gap-4">
-              <button
-                onClick={() => setShowDeleteConfirmModal(false)}
-                className="px-6 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition"
-                disabled={isSubmitting}
-              >
-                Batal
-              </button>
-              <button
-                onClick={confirmDelete}
-                className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? "Menghapus..." : "Ya, Hapus!"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showMsgModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50 p-4">
-          <div className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-sm text-center">
-            {msgIcon === 'success' ? (
-              <svg className="mx-auto w-16 h-16 text-green-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-              </svg>
-            ) : (
-              <svg className="mx-auto w-16 h-16 text-red-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-              </svg>
-            )}
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">{msgTitle}</h2>
-            <p className="text-gray-600 mb-6">{msgText}</p>
-            <button
-              onClick={() => setShowMsgModal(false)}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+        {showEditModal && editingProduct && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 flex items-center justify-center bg-black/70 z-50 p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-lg overflow-y-auto max-h-screen"
             >
-              Tutup
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
+              {/* Konten modal Edit Anda */}
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-2xl font-bold text-gray-800">Edit Produk</h2>
+                <button
+                  onClick={() => setShowEditModal(false)}
+                  className="text-gray-400 hover:text-gray-600 transition"
+                >
+                  <XCircle className="w-7 h-7" />
+                </button>
+              </div>
+
+              <form key={editingProduct.id} onSubmit={handleEditSubmit} className="space-y-4">
+                {editingProduct.image_url &&
+                  !(editingProduct.photo instanceof File) && (
+                    <img
+                      src={`http://localhost:8000/images/products/${editingProduct.image_url}`}
+                      alt={editingProduct.name}
+                      className="w-24 h-24 object-cover rounded-lg mb-2"
+                    />
+                  )}
+
+                <input
+                  type="file"
+                  name="photo"
+                  accept="image/*"
+                  onChange={handleEditChange}
+                  className="w-full border border-gray-300 p-2 rounded-lg"
+                />
+
+                <input
+                  type="text"
+                  name="name"
+                  value={editingProduct.name || ""}
+                  onChange={handleEditChange}
+                  placeholder="Nama Produk"
+                  className="w-full border border-gray-300 p-3 rounded-lg"
+                  required
+                />
+
+                <select
+                  name="type"
+                  value={editingProduct.type ? editingProduct.type.toLowerCase() : ""}
+                  onChange={handleEditChange}
+                  className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
+                  required
+                >
+                  <option value="">Pilih Jenis Produk</option>
+                  <option value="pria">Pria</option>
+                  <option value="wanita">Wanita</option>
+                  <option value="unisex">Unisex</option>
+                </select>
+
+                <input
+                  type="number"
+                  name="price"
+                  value={editingProduct.price || ""}
+                  onChange={handleEditChange}
+                  placeholder="Harga"
+                  className="w-full border border-gray-300 p-3 rounded-lg"
+                  required
+                />
+
+                <input
+                  type="number"
+                  name="stock"
+                  value={editingProduct.stock || ""}
+                  onChange={handleEditChange}
+                  placeholder="Stok"
+                  className="w-full border border-gray-300 p-3 rounded-lg"
+                  required
+                />
+
+                <textarea
+                  name="description"
+                  value={editingProduct.description || ""}
+                  onChange={handleEditChange}
+                  placeholder="Deskripsi"
+                  rows="4"
+                  className="w-full border border-gray-300 p-3 rounded-lg"
+                  required
+                />
+
+                <div className="flex justify-end gap-3 mt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowEditModal(false)}
+                    className="px-6 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? "Menyimpan..." : "Simpan Perubahan"}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {showDeleteConfirmModal && (
+           <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 flex items-center justify-center bg-black/70 z-50 p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-sm text-center"
+            >
+                {/* Konten modal Hapus Anda */}
+                <h2 className="text-2xl font-bold text-gray-800 mb-4">Konfirmasi Hapus</h2>
+                <p className="text-gray-600 mb-6">Apakah Anda yakin ingin menghapus produk ini?</p>
+                <div className="flex justify-center gap-4">
+                    <button
+                        onClick={() => setShowDeleteConfirmModal(false)}
+                        className="px-6 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition"
+                        disabled={isSubmitting}
+                    >
+                        Batal
+                    </button>
+                    <button
+                        onClick={confirmDelete}
+                        className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
+                        disabled={isSubmitting}
+                    >
+                        {isSubmitting ? "Menghapus..." : "Ya, Hapus!"}
+                    </button>
+                </div>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {showMsgModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 flex items-center justify-center bg-black/70 z-50 p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-sm text-center"
+            >
+                {/* Konten modal Pesan Anda */}
+                {msgIcon === 'success' ? (
+                    <svg className="mx-auto w-16 h-16 text-green-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                ) : (
+                    <svg className="mx-auto w-16 h-16 text-red-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                )}
+                <h2 className="text-2xl font-bold text-gray-800 mb-2">{msgTitle}</h2>
+                <p className="text-gray-600 mb-6">{msgText}</p>
+                <button
+                    onClick={() => setShowMsgModal(false)}
+                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                >
+                    Tutup
+                </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 };
 

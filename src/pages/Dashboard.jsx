@@ -10,7 +10,7 @@ import {
   ArcElement,
   Tooltip,
   Legend,
-  Filler, // <-- Tambahkan Filler untuk gradient
+  Filler,
 } from "chart.js";
 import { DollarSign, Package, CheckCircle, Clock } from "lucide-react";
 
@@ -23,12 +23,11 @@ ChartJS.register(
   ArcElement,
   Tooltip,
   Legend,
-  Filler // <-- Register Filler
+  Filler
 );
 
-// --- HELPER COMPONENTS (Komponen Baru untuk UI yang lebih bersih) ---
+// --- HELPER COMPONENTS ---
 
-// Komponen untuk kartu statistik di bagian atas
 const StatCard = ({ icon, title, value, color, loading }) => (
   <div
     className="bg-white p-6 rounded-2xl shadow-lg flex items-center gap-6 border-l-4"
@@ -60,7 +59,6 @@ const StatCard = ({ icon, title, value, color, loading }) => (
   </div>
 );
 
-// Komponen Skeleton untuk loading state yang elegan
 const Skeleton = ({ className }) => (
   <div className={`bg-gray-200 rounded animate-pulse ${className}`} />
 );
@@ -68,7 +66,7 @@ const Skeleton = ({ className }) => (
 // --- MAIN DASHBOARD COMPONENT ---
 
 const Dashboard = () => {
-  // --- STATE MANAGEMENT (Tidak ada perubahan) ---
+  // ... (State dan fungsi Anda dari baris 70 sampai 230 tetap sama)
   const [stats, setStats] = useState({
     totalRevenue: 0,
     pending: 0,
@@ -86,9 +84,8 @@ const Dashboard = () => {
     recent: true,
     sales: true,
   });
-  const [salesFilter, setSalesFilter] = useState("annual"); // Ubah default ke 'annual' agar lebih pas
+  const [salesFilter, setSalesFilter] = useState("annual");
 
-  // --- DATA FETCHING (INI BAGIAN YANG DIPERBAIKI) ---
   useEffect(() => {
     const token = localStorage.getItem("adminToken");
     if (!token) {
@@ -104,14 +101,12 @@ const Dashboard = () => {
         if (!response.ok) throw new Error(`Fetch failed for ${endpoint}`);
         const result = await response.json();
 
-        // Disesuaikan dengan state setter yang ada
-        if (key === "summary") setStats(result.data); // 'summary' akan mengisi state 'stats'
+        if (key === "summary") setStats(result.data);
         if (key === "recent") setRecentOrders(result.data);
         if (key === "sales") setSalesData(result.data);
       } catch (err) {
         console.error(err.message);
       } finally {
-        // Disederhanakan untuk loading state
         setLoading((prev) => ({
           ...prev,
           [key === "summary" ? "stats" : key]: false,
@@ -119,19 +114,18 @@ const Dashboard = () => {
       }
     };
 
-    // Panggil endpoint baru yang sudah kita buat di Laravel
-    fetchData("dashboard-summary", "summary"); // Memanggil /dashboard-summary
-    fetchData("orders-recent", "recent"); // Ini sudah benar dari awal
-    fetchData("dashboard-sales", "sales"); // Memanggil /dashboard-sales
+    fetchData("dashboard-summary", "summary");
+    fetchData("orders-recent", "recent");
+    fetchData("dashboard-sales", "sales");
   }, []);
 
-  // --- UTILITY FUNCTIONS ---
   const formatCurrency = (value) =>
     new Intl.NumberFormat("id-ID", {
       style: "currency",
       currency: "IDR",
       minimumFractionDigits: 0,
     }).format(value);
+
   const getStatusChip = (status) => {
     const styles = {
       pending: "bg-yellow-100 text-yellow-700",
@@ -152,7 +146,6 @@ const Dashboard = () => {
     );
   };
 
-  // --- CHART CONFIGURATION ---
   const activeSalesData = salesData[salesFilter] || { labels: [], data: [] };
 
   const salesChartData = {
@@ -161,7 +154,7 @@ const Dashboard = () => {
       {
         label: "Total Penjualan",
         data: activeSalesData.data,
-        borderColor: "#10B981", // Emerald-500
+        borderColor: "#10B981",
         backgroundColor: (context) => {
           const ctx = context.chart.ctx;
           const gradient = ctx.createLinearGradient(0, 0, 0, 200);
@@ -198,7 +191,7 @@ const Dashboard = () => {
     datasets: [
       {
         data: [stats.pending, stats.processing, stats.completed],
-        backgroundColor: ["#FBBF24", "#3B82F6", "#10B981"], // Amber, Blue, Emerald
+        backgroundColor: ["#FBBF24", "#3B82F6", "#10B981"],
         borderColor: "#fff",
         borderWidth: 4,
         hoverOffset: 10,
@@ -206,12 +199,12 @@ const Dashboard = () => {
     ],
   };
 
-  // --- ANIMATION VARIANTS (Framer Motion) ---
+  // --- PERUBAHAN ANIMASI DI SINI ---
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: { staggerChildren: 0.1, delayChildren: 0.2 },
+      transition: { staggerChildren: 0.1 }, // Dibuat lebih cepat dan sinkron
     },
   };
 
@@ -220,17 +213,17 @@ const Dashboard = () => {
     visible: {
       y: 0,
       opacity: 1,
-      transition: { type: "spring", stiffness: 100 },
+      // Transisi 'spring' dihapus agar menjadi 'tween' standar
     },
   };
 
-  // --- RENDER JSX ---
   return (
+    // PERUBAHAN: Menghapus p-2
     <motion.div
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="space-y-8"
+      className="space-y-8 p-2"
     >
       {/* --- Header --- */}
       <motion.h1
@@ -276,12 +269,13 @@ const Dashboard = () => {
       </motion.div>
 
       {/* --- Charts Grid --- */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      {/* PERUBAHAN: Menambahkan motion.div pembungkus untuk animasi stagger */}
+      <motion.div
+        variants={itemVariants}
+        className="grid grid-cols-1 lg:grid-cols-3 gap-8"
+      >
         {/* Line Chart */}
-        <motion.div
-          variants={itemVariants}
-          className="bg-white lg:col-span-2 p-6 rounded-2xl shadow-lg"
-        >
+        <div className="bg-white lg:col-span-2 p-6 rounded-2xl shadow-lg">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-xl font-semibold text-gray-800">
               Grafik Penjualan
@@ -309,13 +303,10 @@ const Dashboard = () => {
               <Line data={salesChartData} options={salesChartOptions} />
             )}
           </div>
-        </motion.div>
+        </div>
 
         {/* Doughnut Chart */}
-        <motion.div
-          variants={itemVariants}
-          className="bg-white p-6 rounded-2xl shadow-lg"
-        >
+        <div className="bg-white p-6 rounded-2xl shadow-lg">
           <h3 className="text-xl font-semibold text-gray-800 mb-4">
             Ringkasan Pesanan
           </h3>
@@ -333,8 +324,8 @@ const Dashboard = () => {
               />
             )}
           </div>
-        </motion.div>
-      </div>
+        </div>
+      </motion.div>
 
       {/* --- Recent Orders Table --- */}
       <motion.div

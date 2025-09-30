@@ -5,131 +5,88 @@ import {
   Users,
   BarChart2,
   LogOut,
-  Moon,
-  Sun,
+  Package, // Ikon baru untuk logo
 } from "lucide-react";
-import { NavLink, Link } from "react-router-dom";
-import axios from "axios";
+import { NavLink } from "react-router-dom";
 
-const handleLogout = async () => {
-  const token = localStorage.getItem("adminToken");
-
-  if (!token) return window.location.href = "/login"; // fallback
-
-  try {
-    await axios.post(
-      "http://localhost:8000/api/admin/logout",
-      {},
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-  } catch (err) {
-    console.error("Logout gagal:", err.response?.data || err.message);
-  } finally {
-    // Hapus token dari localStorage & redirect
-    localStorage.removeItem("adminToken");
-    window.location.href = "/login";
-  }
-};
-
+// Komponen NavItem yang sudah disempurnakan
 const NavItem = ({ to, icon: Icon, children }) => (
   <NavLink
     to={to}
     className={({ isActive }) =>
-      `flex items-center space-x-3 px-4 py-2.5 rounded-lg transition-colors duration-200 ${
-        // isActive ? "bg-green-600/75 text-white" : "text-gray-500 hover:bg-gray-100"
-        isActive ? "bg-green-500/20 text-green-700" : "text-gray-500 hover:bg-gray-100"
+      `flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+        isActive
+          ? "bg-gradient-to-r from-green-500/20 to-slate-800/5 text-white font-semibold border-l-4 border-green-500"
+          : "text-slate-400 hover:bg-slate-800 hover:text-slate-100"
       }`
     }
   >
     <Icon className="w-5 h-5" />
-    <span className="font-medium">{children}</span>
+    <span>{children}</span>
   </NavLink>
 );
 
 const Sidebar = () => {
+  const handleLogout = () => {
+    // Logika logout sederhana, hapus token dan redirect
+    localStorage.removeItem("adminToken");
+    window.location.href = "/login";
+  };
+
   return (
-    <aside className="w-64 bg-white shadow-md flex flex-col h-screen fixed top-0 left-0">
-      {/* Logo */}
-      <div className="p-6 flex items-center">
-        {/* <span className="w-3 h-3 bg-emerald-500 rounded-full mr-1.5"></span> */}
-        <img
-          src="images/mulyajaya.png"
-          alt="Mulya Jaya Icon"
-          className="w-10 h-10 rounded-full border-4 border-green-400 mr-1.5"
-        />
-        <h1 className="text-2xl font-bold text-gray-800">Mulya</h1>
-        <h1 className="text-2xl font-bold text-green-600">Admin</h1>
+    <aside className="w-64 bg-slate-900 flex flex-col h-screen fixed top-0 left-0 border-r border-slate-800">
+      {/* --- Logo --- */}
+      <div className="p-6 flex items-center gap-4 border-b border-slate-800">
+        <div className="bg-green-500/10 p-3 rounded-lg text-green-400">
+          {/* <Package size={28} /> */}
+          <img src="/images/mulyajaya.png" className="w-12"/>
+        </div>
+        <h1 className="text-xl font-bold text-slate-100 tracking-wider">
+          Mulya Jaya <span className="text-green-400">Admin</span>
+        </h1>
       </div>
 
-      {/* Menu */}
-      <nav className="mt-2 flex-1 px-4 space-y-1">
-        <p className="mb-2 px-4 py-2 text-xs font-semibold text-gray-400 uppercase border-b border-gray-300">
-          <span>Marketing</span>
+      {/* --- Menu --- */}
+      <nav className="mt-6 flex-1 px-4 space-y-2">
+        <p className="mb-2 px-2 text-xs font-bold text-slate-500 uppercase">
+          Menu
         </p>
         <NavItem to="/dashboard" icon={Home}>
           Dashboard
         </NavItem>
         <NavItem to="/products" icon={Boxes}>
-          Manage products
+          Produk
         </NavItem>
         <NavItem to="/orders" icon={List}>
-          Manage order
+          Pesanan
         </NavItem>
         <NavItem to="/users" icon={Users}>
-          Manage user
+          Pelanggan
         </NavItem>
         <NavItem to="/reports" icon={BarChart2}>
-          Report
+          Laporan
         </NavItem>
       </nav>
 
-      {/* Dark mode toggle */}
-      {/* <div className="p-4 border-t">
-        <div className="flex justify-between items-center p-2 rounded-lg bg-gray-100">
-          <span className="font-medium text-gray-700">Dark mode</span>
-          <button className="flex items-center gap-2 p-1.5 rounded-full bg-white">
-            <div className="p-1 rounded-full bg-gray-200 text-gray-500">
-              <Sun size={16} />
-            </div>
-            <div className="p-1 text-gray-500">
-              <Moon size={16} />
-            </div>
-          </button>
-        </div>
-      </div> */}
-
-      {/* User section */}
-      <div className="p-4 border-t border-gray-300 flex items-center justify-between">
-        <div className="flex items-center space-x-3">
+      {/* --- User Section --- */}
+      <div className="p-4 border-t border-slate-800 flex items-center justify-between">
+        <div className="flex items-center gap-3">
           <img
             src="https://cdn-icons-png.freepik.com/512/9703/9703596.png"
             alt="User Avatar"
-            className="w-10 h-10 rounded-full border-3 border-green-500"
+            className="w-10 h-10 rounded-full ring-2 ring-slate-700"
           />
           <div>
-            <p className="font-semibold text-gray-800">Admin</p>
-            <p className="text-sm text-gray-500">Mulya Jaya</p>
+            <p className="font-semibold text-slate-100">Admin</p>
+            <p className="text-xs text-slate-400">Administrator</p>
           </div>
         </div>
-        {/* <Link to="/login" className="text-gray-500 hover:text-red-500 transition">
-          <LogOut className="w-5 h-5" />
-        </Link> */}
         <button
-          onClick={() => {
-            // Hapus token dari localStorage
-            localStorage.removeItem("adminToken");
-
-            // Redirect ke login
-            window.location.href = "/login";
-          }}
-          className="text-gray-500 hover:text-red-500 transition flex items-center"
+          onClick={handleLogout}
+          title="Logout"
+          className="text-slate-500 hover:text-red-400 transition-colors duration-200"
         >
-          <LogOut className="w-5 h-5 mr-1" />
-          <span className="text-sm">Logout</span>
+          <LogOut className="w-5 h-5" />
         </button>
       </div>
     </aside>

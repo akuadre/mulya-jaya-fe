@@ -339,7 +339,7 @@ const Dashboard = () => {
           <table className="w-full text-left">
             <thead className="border-b-2 border-gray-100">
               <tr>
-                {["ID Pesanan", "Pelanggan", "Produk", "Total", "Status"].map(
+                {["No", "Pelanggan", "Produk", "Total", "Status"].map(
                   (head) => (
                     <th
                       key={head}

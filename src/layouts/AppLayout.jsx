@@ -6,7 +6,7 @@ const AppLayout = () => {
   return (
     <div className="flex min-h-screen bg-gray-100">
       {/* Container untuk Sidebar yang tidak berubah */}
-      <div className="w-64">
+      <div className="w-[264px]">
         <Sidebar />
       </div>
 

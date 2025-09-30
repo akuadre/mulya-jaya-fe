@@ -34,7 +34,7 @@ const Sidebar = () => {
   };
 
   return (
-    <aside className="w-64 bg-slate-900 flex flex-col h-screen fixed top-0 left-0 border-r border-slate-800">
+    <aside className="w-[264px] bg-slate-900 flex flex-col h-screen fixed top-0 left-0 border-r border-slate-800">
       {/* --- Logo --- */}
       <div className="p-6 flex items-center gap-4 border-b border-slate-800">
         <div className="bg-green-500/10 p-3 rounded-lg text-green-400">

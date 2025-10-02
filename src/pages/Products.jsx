@@ -375,7 +375,12 @@ const Products = () => {
                       <td className="py-3 px-4 flex items-center gap-2">
                         <button
                           onClick={() => {
-                            setEditingProduct(p);
+                            setEditingProduct({
+                              ...p,
+                              // lower case type
+                              type: p.type.toLowerCase(),
+                            }
+                            );
                             setIsEditModalOpen(true);
                           }}
                           className="bg-gray-100 text-gray-700 font-semibold px-3 py-1.5 rounded-lg hover:bg-gray-200 transition flex items-center"
@@ -458,7 +463,9 @@ const Products = () => {
               Batal
             </button>
             <button
-              onClick={handleAddSubmit}
+              // onClick={handleAddSubmit}
+              type="submit"
+              form="addProductForm" // kasih id form biar aman
               className="bg-green-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-green-700 disabled:bg-gray-400"
               disabled={isSubmitting}
             >
@@ -467,7 +474,7 @@ const Products = () => {
           </div>
         }
       >
-        <form onSubmit={handleAddSubmit} className="space-y-4">
+        <form id="addProductForm" onSubmit={handleAddSubmit} className="space-y-4">
           <FormInput
             label="Foto Produk"
             id="photo"
@@ -564,7 +571,9 @@ const Products = () => {
                 Batal
               </button>
               <button
-                onClick={handleEditSubmit}
+                // onClick={handleEditSubmit}
+                type="submit"  
+                form="editProductForm" // kasih id form biar aman
                 className="bg-green-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-green-700 disabled:bg-gray-400"
                 disabled={isSubmitting}
               >
@@ -573,7 +582,7 @@ const Products = () => {
             </div>
           }
         >
-          <form onSubmit={handleEditSubmit} className="space-y-4">
+          <form id="editProductForm" onSubmit={handleEditSubmit} className="space-y-4">
             {editingProduct.image_url &&
               !(editingProduct.photo instanceof File) && (
                 <img

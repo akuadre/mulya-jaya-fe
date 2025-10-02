@@ -44,7 +44,7 @@ export const useNotification = () => {
  */
 const Notification = ({ notification, onDismiss }) => {
   return (
-    <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50">
+    <div className="fixed top-5 left-1/2 -translate-x-1/2 z-[9999]">
       <AnimatePresence>
         {notification && (
           <motion.div

@@ -12,7 +12,7 @@ import {
   Legend,
   Filler,
 } from "chart.js";
-import { DollarSign, Package, CheckCircle, Clock } from "lucide-react";
+import { DollarSign, Package, CheckCircle, Clock, XCircle } from "lucide-react";
 
 // Register Chart.js components
 ChartJS.register(
@@ -71,7 +71,9 @@ const Dashboard = () => {
     totalRevenue: 0,
     pending: 0,
     processing: 0,
+    sending: 0,
     completed: 0,
+    cancelled: 0,
   });
   const [recentOrders, setRecentOrders] = useState([]);
   const [salesData, setSalesData] = useState({
@@ -129,13 +131,17 @@ const Dashboard = () => {
   const getStatusChip = (status) => {
     const styles = {
       pending: "bg-yellow-100 text-yellow-700",
-      processing: "bg-blue-100 text-blue-700",
+      processing: "bg-indigo-100 text-indigo-700",
+      sending: "bg-blue-100 text-blue-700",
       completed: "bg-green-100 text-green-700",
+      cancelled: "bg-red-100 text-red-700",
     };
     const text = {
       pending: "Pending",
-      processing: "Dikirim",
+      processing: "Diproses",
+      sending: "Dikirim",
       completed: "Selesai",
+      cancelled: "Dibatalkan",
     };
     return (
       <span
@@ -187,11 +193,23 @@ const Dashboard = () => {
   };
 
   const doughnutChartData = {
-    labels: ["Pending", "Dikirim", "Selesai"],
+    labels: ["Pending", "Diproses", "Dikirim", "Selesai", "Dibatalkan"],
     datasets: [
       {
-        data: [stats.pending, stats.processing, stats.completed],
-        backgroundColor: ["#FBBF24", "#3B82F6", "#10B981"],
+        data: [
+          stats.pending,
+          stats.processing,
+          stats.sending,
+          stats.completed,
+          stats.cancelled,
+        ],
+        backgroundColor: [
+          "#FBBF24", // kuning
+          "#6366F1", // indigo
+          "#3B82F6", // biru
+          "#10B981", // hijau
+          "#EF4444", // merah
+        ],
         borderColor: "#fff",
         borderWidth: 4,
         hoverOffset: 10,
@@ -236,7 +254,7 @@ const Dashboard = () => {
       {/* --- Stat Cards Grid --- */}
       <motion.div
         variants={itemVariants}
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+        className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6"
       >
         <StatCard
           icon={<DollarSign size={28} className="text-green-600" />}
@@ -253,17 +271,31 @@ const Dashboard = () => {
           loading={loading.stats}
         />
         <StatCard
-          icon={<Package size={28} className="text-blue-600" />}
-          title="Pesanan Dikirim"
-          value={stats.processing}
-          color="#3B82F6"
-          loading={loading.stats}
-        />
-        <StatCard
           icon={<CheckCircle size={28} className="text-emerald-600" />}
           title="Pesanan Selesai"
           value={stats.completed}
           color="#10B981"
+          loading={loading.stats}
+        />
+        <StatCard
+          icon={<Package size={28} className="text-indigo-600" />}
+          title="Pesanan Diproses"
+          value={stats.processing}
+          color="#6366F1"
+          loading={loading.stats}
+        />
+        <StatCard
+          icon={<Package size={28} className="text-blue-600" />}
+          title="Pesanan Dikirim"
+          value={stats.sending}
+          color="#3B82F6"
+          loading={loading.stats}
+        />
+        <StatCard
+          icon={<XCircle size={28} className="text-red-600" />}
+          title="Pesanan Dibatalkan"
+          value={stats.cancelled}
+          color="#EF4444"
           loading={loading.stats}
         />
       </motion.div>
@@ -296,7 +328,7 @@ const Dashboard = () => {
               ))}
             </div>
           </div>
-          <div className="h-80">
+          <div className="h-[22rem]">
             {loading.sales ? (
               <Skeleton className="w-full h-full" />
             ) : (

@@ -178,26 +178,26 @@ const Reports = () => {
         />
         <ReportCard
           icon={<TrendingUp size={24} className="text-sky-800" />}
-          title="Pendapatan Tahun Ini"
-          value={formatCurrency(reportData?.summary?.totalRevenueCurrentYear)}
+          title="Pendapatan Bulan Ini"
+          value={formatCurrency(reportData?.summary?.totalRevenueCurrentMonth)}
           color="bg-sky-100"
           loading={loading}
         />
         <ReportCard
           icon={<ShoppingCart size={24} className="text-indigo-800" />}
-          title="Pesanan Bulan Ini"
+          title="Pesanan Tahun Ini"
           value={
-            loading
-              ? "..."
-              : `${reportData?.summary?.totalOrdersCurrentMonth} pesanan`
+            loading ? "..." : `${reportData?.summary?.totalOrdersCurrentYear} pesanan`
           }
           color="bg-indigo-100"
           loading={loading}
         />
         <ReportCard
           icon={<Package size={24} className="text-amber-800" />}
-          title="Rata-rata per Pesanan"
-          value={formatCurrency(reportData?.summary?.averageOrderValue)}
+          title="Pesanan Bulan Ini"
+          value={
+            loading ? "..." : `${reportData?.summary?.totalOrdersCurrentMonth} pesanan`
+          }
           color="bg-amber-100"
           loading={loading}
         />

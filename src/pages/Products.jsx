@@ -8,6 +8,30 @@ import Modal from "../components/Modal";
 import FormInput from "../components/FormInput";
 import Notification, { useNotification } from "../components/Notification";
 
+// --- KOMPONEN GAMBAR DENGAN LOADER (SKELETON) ---
+const ImageWithLoader = ({ src, alt }) => {
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  return (
+    <div className="w-16 h-16 relative">
+      {!isLoaded && (
+        <div className="absolute inset-0 bg-gray-200 rounded-md animate-pulse"></div>
+      )}
+      <img
+        src={src}
+        alt={alt}
+        className={`w-full h-full object-cover rounded-md shadow-sm transition-opacity duration-300 ${isLoaded ? "opacity-100" : "opacity-0"}`}
+        onLoad={() => setIsLoaded(true)}
+        onError={(e) => {
+          e.target.onerror = null;
+          e.target.src =
+            "https://placehold.co/80x80/f3f4f6/4f4f4f?text=Gagal";
+        }}
+      />
+    </div>
+  );
+};
+
 const Products = () => {
   const authToken = localStorage.getItem("adminToken");
 
@@ -350,7 +374,15 @@ const Products = () => {
                         {startIndex + index + 1}
                       </td>
                       <td className="py-3 px-4">
-                        <img
+                        <ImageWithLoader
+                          src={
+                            p.image_url
+                              ? `http://localhost:8000/images/products/${p.image_url}`
+                              : "https://placehold.co/80x80/f3f4f6/4f4f4f?text=N/A"
+                          }
+                          alt={p.name}
+                        />
+                        {/* <img
                           src={
                             p.image_url
                               ? `http://localhost:8000/images/products/${p.image_url}`
@@ -358,7 +390,7 @@ const Products = () => {
                           }
                           alt={p.name}
                           className="w-20 h-20 object-cover rounded-md shadow-sm"
-                        />
+                        /> */}
                       </td>
                       <td className="py-3 px-4 w-36">{p.name}</td>
                       <td className="py-3 px-4 w-32 capitalize">{p.type}</td>

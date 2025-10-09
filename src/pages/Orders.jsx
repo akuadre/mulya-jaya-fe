@@ -127,7 +127,7 @@ const Orders = () => {
   const LoadingTable = () => (
     <div className="overflow-x-auto">
       <table className="w-full text-sm animate-pulse">
-        <thead className="bg-gray-50"><tr className="text-left text-gray-500 uppercase border-b border-gray-200"><th className="py-3 px-4">NO</th><th className="py-3 px-4">Kode Pesanan</th><th className="py-3 px-4">Pelanggan</th><th className="py-3 px-4">Produk</th><th className="py-3 px-4">Total</th><th className="py-3 px-4">Status</th><th className="py-3 px-4">Dibuat Pada</th><th className="py-3 px-4">Aksi</th></tr></thead>
+        <thead className="bg-gray-50"><tr className="text-left text-gray-500 uppercase border-b border-gray-200"><th className="py-3 px-4">NO</th><th className="py-3 px-4">Kode Pesanan</th><th className="py-3 px-4">Pelanggan</th><th className="py-3 px-4">Produk</th><th className="py-3 px-4">Total</th><th className="py-3 px-4">Metode Pembayaran</th><th className="py-3 px-4">Status</th><th className="py-3 px-4">Dibuat Pada</th><th className="py-3 px-4">Aksi</th></tr></thead>
         <tbody>
           {[...Array(rowsPerPage)].map((_, index) => (
             <tr key={index} className="border-b border-gray-200">
@@ -136,6 +136,7 @@ const Orders = () => {
               <td className="py-3 px-4"><div className="h-4 bg-gray-200 rounded w-3/4"></div></td>
               <td className="py-3 px-4"><div className="h-4 bg-gray-200 rounded w-3/4"></div></td>
               <td className="py-3 px-4"><div className="h-4 bg-gray-200 rounded w-1/2"></div></td>
+              <td className="py-3 px-4"><div className="h-4 bg-gray-200 rounded w-1/3"></div></td>
               <td className="py-3 px-4"><div className="h-6 w-20 bg-gray-200 rounded-full"></div></td>
               <td className="py-3 px-4"><div className="h-4 bg-gray-200 rounded w-full"></div></td>
               <td className="py-3 px-4"><div className="h-8 w-24 bg-gray-200 rounded-lg"></div></td>
@@ -176,7 +177,7 @@ const Orders = () => {
         <motion.div variants={itemVariants} className="overflow-x-auto">
           {loading ? <LoadingTable /> : error ? <div className="text-center py-10 text-red-500 font-semibold">{error}</div> : (
             <table className="w-full text-sm">
-              <thead className="bg-gray-50"><tr className="text-left text-gray-500 uppercase border-b border-gray-200"><th className="py-3 px-4">No</th><th className="py-3 px-4">Kode Pesanan</th><th className="py-3 px-4">Pelanggan</th><th className="py-3 px-4">Produk</th><th className="py-3 px-4">Total</th><th className="py-3 px-4">Status</th><th className="py-3 px-4">Dibuat Pada</th><th className="py-3 px-4">Aksi</th></tr></thead>
+              <thead className="bg-gray-50"><tr className="text-left text-gray-500 uppercase border-b border-gray-200"><th className="py-3 px-4">No</th><th className="py-3 px-4">Kode Pesanan</th><th className="py-3 px-4">Pelanggan</th><th className="py-3 px-4">Produk</th><th className="py-3 px-4">Total</th><th className="py-3 px-4">Metode Pembayaran</th><th className="py-3 px-4">Status</th><th className="py-3 px-4">Dibuat Pada</th><th className="py-3 px-4">Aksi</th></tr></thead>
               <tbody>
                 {paginatedOrders.length > 0 ? (
                   paginatedOrders.map((o, index) => (
@@ -186,6 +187,7 @@ const Orders = () => {
                       <td className="py-3 px-4">{o.user?.name || '-'}</td>
                       <td className="py-3 px-4">{o.product?.name || '-'}</td>
                       <td className="py-3 px-4 font-semibold">{formatPrice(o.total_price)}</td>
+                      <td className="py-3 px-4 capitalize">{o.payment_method || '-'}</td>
                       <td className="py-3 px-4"><span className={`py-1 px-2.5 rounded-full text-xs font-medium ${statusColors[o.status] || ''}`}>{statusMap[o.status] || o.status}</span></td>
                       <td className="py-3 px-4 text-gray-600">{formatDate(o.created_at)}</td>
                       <td className="py-3 px-4"><button onClick={() => handleEdit(o)} className="bg-gray-100 text-gray-700 font-semibold px-3 py-1.5 rounded-lg hover:bg-gray-200 transition flex items-center"><StepForward className="w-4 h-4 mr-1.5" /> Ubah Status</button></td>

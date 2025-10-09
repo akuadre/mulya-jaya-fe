@@ -292,7 +292,7 @@ const Products = () => {
       />
 
       <motion.div
-        className="bg-white shadow-lg rounded-lg p-6 max-w-7xl mx-auto"
+        className="bg-white shadow-lg rounded-lg p-6 space-y-4"
         variants={containerVariants}
         initial="hidden"
         animate="visible"

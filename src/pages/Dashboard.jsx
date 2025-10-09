@@ -12,7 +12,7 @@ import {
   Legend,
   Filler,
 } from "chart.js";
-import { DollarSign, Package, CheckCircle, Clock, XCircle } from "lucide-react";
+import { DollarSign, Package, CheckCircle, Clock, XCircle, Truck } from "lucide-react";
 
 // Register Chart.js components
 ChartJS.register(
@@ -285,7 +285,7 @@ const Dashboard = () => {
           loading={loading.stats}
         />
         <StatCard
-          icon={<Package size={28} className="text-blue-600" />}
+          icon={<Truck size={28} className="text-blue-600" />}
           title="Pesanan Dikirim"
           value={stats.sending}
           color="#3B82F6"

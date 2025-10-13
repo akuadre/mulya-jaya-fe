@@ -155,7 +155,7 @@ const Reports = () => {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="space-y-8"
+      className="space-y-8 p-2"
     >
       <motion.h1
         variants={itemVariants}

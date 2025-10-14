@@ -20,6 +20,7 @@ import {
   AlertTriangle,
   Award,
 } from "lucide-react";
+import axiosClient from "../lib/axiosClient";
 
 // Register Chart.js components (sudah ada di Dashboard, tapi lebih baik ada di sini juga)
 ChartJS.register(
@@ -67,27 +68,32 @@ const Reports = () => {
   useEffect(() => {
     const fetchReports = async () => {
       setLoading(true);
-      const token = localStorage.getItem("adminToken");
-      if (!token) return;
 
       try {
-        const response = await fetch(
-          `http://localhost:8000/api/reports?period=${period}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        if (!response.ok) throw new Error("Gagal mengambil data laporan.");
-        const result = await response.json();
-        setReportData(result.data);
+        const token = localStorage.getItem("adminToken");
+        if (!token) {
+          window.location.href = "/login";
+          return;
+        }
+
+        const response = await axiosClient.get(`/api/reports`, {
+          params: { period }, // <-- lebih clean daripada string manual
+        });
+
+        const result = response.data;
+        if (result.success) {
+          setReportData(result.data);
+        } else {
+          throw new Error(result.message || "Gagal mengambil data laporan.");
+        }
       } catch (error) {
-        console.error(error);
+        console.error("Fetch error:", error);
       } finally {
         setLoading(false);
       }
     };
     fetchReports();
-  }, [period]); // <-- Re-fetch data saat 'period' berubah
+  }, [period]);
 
   const formatCurrency = (value) =>
     new Intl.NumberFormat("id-ID", {
@@ -187,7 +193,9 @@ const Reports = () => {
           icon={<ShoppingCart size={24} className="text-indigo-800" />}
           title="Pesanan Tahun Ini"
           value={
-            loading ? "..." : `${reportData?.summary?.totalOrdersCurrentYear} pesanan`
+            loading
+              ? "..."
+              : `${reportData?.summary?.totalOrdersCurrentYear} pesanan`
           }
           color="bg-indigo-100"
           loading={loading}
@@ -196,7 +204,9 @@ const Reports = () => {
           icon={<Package size={24} className="text-amber-800" />}
           title="Pesanan Bulan Ini"
           value={
-            loading ? "..." : `${reportData?.summary?.totalOrdersCurrentMonth} pesanan`
+            loading
+              ? "..."
+              : `${reportData?.summary?.totalOrdersCurrentMonth} pesanan`
           }
           color="bg-amber-100"
           loading={loading}

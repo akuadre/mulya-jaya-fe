@@ -13,6 +13,7 @@ import {
   Filler,
 } from "chart.js";
 import { DollarSign, Package, CheckCircle, Clock, XCircle, Truck } from "lucide-react";
+import axiosClient from "../lib/axiosClient";
 
 // Register Chart.js components
 ChartJS.register(
@@ -97,17 +98,14 @@ const Dashboard = () => {
 
     const fetchData = async (endpoint, key) => {
       try {
-        const response = await fetch(`http://localhost:8000/api/${endpoint}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!response.ok) throw new Error(`Fetch failed for ${endpoint}`);
-        const result = await response.json();
+        const response = await axiosClient.get(`/api/${endpoint}`);
+        const result = response.data;
 
         if (key === "summary") setStats(result.data);
         if (key === "recent") setRecentOrders(result.data);
         if (key === "sales") setSalesData(result.data);
       } catch (err) {
-        console.error(err.message);
+        console.error(`Fetch failed for ${endpoint}`, err);
       } finally {
         setLoading((prev) => ({
           ...prev,

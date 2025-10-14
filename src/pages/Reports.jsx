@@ -11,6 +11,7 @@ import {
   Legend,
   Filler,
 } from "chart.js";
+
 import {
   DollarSign,
   TrendingUp,
@@ -21,10 +22,16 @@ import {
   Award,
   Download,
 } from "lucide-react";
+
 import axiosClient from "../lib/axiosClient";
 
 // Import library untuk export Excel
 import * as XLSX from "xlsx";
+
+// Import untuk PDF - PERBAIKAN DI SINI
+import jsPDF from "jspdf";
+// Import autoTable secara terpisah
+import autoTable from "jspdf-autotable";
 
 // Register Chart.js components
 ChartJS.register(
@@ -110,6 +117,12 @@ const Reports = () => {
     new Intl.NumberFormat("id-ID", {
       style: "currency",
       currency: "IDR",
+      minimumFractionDigits: 0,
+    }).format(value || 0);
+
+  // Format currency untuk PDF (tanpa simbol Rp)
+  const formatCurrencyForPDF = (value) =>
+    new Intl.NumberFormat("id-ID", {
       minimumFractionDigits: 0,
     }).format(value || 0);
 
@@ -216,6 +229,131 @@ const Reports = () => {
     }
   };
 
+  // --- FUNGSI EXPORT PDF YANG SUDAH DIPERBAIKI ---
+  const exportToPDF = () => {
+    setExportLoading(true);
+    
+    try {
+      // Buat instance jsPDF
+      const doc = new jsPDF("p", "mm", "a4");
+      const date = new Date().toLocaleDateString("id-ID");
+      const periodLabel = 
+        period === "daily" ? "30 Hari Terakhir" :
+        period === "monthly" ? "Bulanan" : "Tahunan";
+
+      let currentY = 15;
+
+      // --- HEADER ---
+      doc.setFontSize(16);
+      doc.setFont("helvetica", "bold");
+      doc.text("LAPORAN PENJUALAN", 105, currentY, { align: "center" });
+      
+      currentY += 10;
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      doc.text(`Tanggal Export: ${date}`, 14, currentY);
+      doc.text(`Periode: ${periodLabel}`, 14, currentY + 5);
+
+      currentY += 15;
+
+      // --- SUMMARY TABLE ---
+      autoTable(doc, {
+        startY: currentY,
+        head: [["Keterangan", "Nilai"]],
+        body: [
+          [
+            "Total Pendapatan Keseluruhan",
+            `Rp ${formatCurrencyForPDF(reportData?.summary?.totalRevenueAllTime || 0)}`
+          ],
+          [
+            "Pendapatan Bulan Ini",
+            `Rp ${formatCurrencyForPDF(reportData?.summary?.totalRevenueCurrentMonth || 0)}`
+          ],
+          [
+            "Total Pesanan Tahun Ini",
+            `${reportData?.summary?.totalOrdersCurrentYear || 0} pesanan`
+          ],
+          [
+            "Total Pesanan Bulan Ini",
+            `${reportData?.summary?.totalOrdersCurrentMonth || 0} pesanan`
+          ],
+        ],
+        styles: { fontSize: 10 },
+        headStyles: { 
+          fillColor: [220, 220, 220],
+          textColor: [0, 0, 0],
+          fontStyle: 'bold'
+        },
+        margin: { top: 10 }
+      });
+
+      // --- SALES TREND TABLE ---
+      if (reportData?.salesOverTime && reportData.salesOverTime.labels.length > 0) {
+        autoTable(doc, {
+          startY: doc.lastAutoTable.finalY + 10,
+          head: [["Periode", "Total Penjualan (Rp)"]],
+          body: reportData.salesOverTime.labels.map((label, i) => [
+            label,
+            formatCurrencyForPDF(reportData.salesOverTime.data[i] || 0)
+          ]),
+          styles: { fontSize: 9 },
+          headStyles: { 
+            fillColor: [230, 230, 230],
+            textColor: [0, 0, 0],
+            fontStyle: 'bold'
+          },
+          pageBreak: 'auto'
+        });
+      }
+
+      // --- LOW STOCK TABLE ---
+      if (reportData?.lowStockProducts?.length > 0) {
+        autoTable(doc, {
+          startY: doc.lastAutoTable.finalY + 10,
+          head: [["Produk Stok Rendah", "Stok Tersisa"]],
+          body: reportData.lowStockProducts.map((p) => [p.name, p.stock.toString()]),
+          styles: { fontSize: 9 },
+          headStyles: { 
+            fillColor: [255, 200, 200],
+            textColor: [0, 0, 0],
+            fontStyle: 'bold'
+          },
+          pageBreak: 'auto'
+        });
+      }
+
+      // --- BEST SELLING TABLE ---
+      if (reportData?.bestSellingProducts?.length > 0) {
+        autoTable(doc, {
+          startY: doc.lastAutoTable.finalY + 10,
+          head: [["Produk Terlaris", "Jumlah Terjual"]],
+          body: reportData.bestSellingProducts.map((p) => [
+            p.name, 
+            p.sales_count.toString()
+          ]),
+          styles: { fontSize: 9 },
+          headStyles: { 
+            fillColor: [200, 230, 200],
+            textColor: [0, 0, 0],
+            fontStyle: 'bold'
+          }
+        });
+      }
+
+      // --- SAVE FILE ---
+      const fileName = `laporan_penjualan_${period}_${
+        new Date().toISOString().split("T")[0]
+      }.pdf`;
+      doc.save(fileName);
+
+    } catch (error) {
+      console.error("PDF Export error:", error);
+      alert("Gagal mengexport data ke PDF: " + error.message);
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
   // --- CHART CONFIGURATION ---
   const salesChartData = {
     labels: reportData?.salesOverTime?.labels || [],
@@ -295,24 +433,44 @@ const Reports = () => {
             </p>
           </div>
 
-          {/* Tombol Export Excel */}
-          <button
-            onClick={exportToExcel}
-            disabled={exportLoading || loading || !reportData}
-            className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-semibold rounded-lg transition-colors duration-200 whitespace-nowrap"
-          >
-            {exportLoading ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                <span>Exporting...</span>
-              </>
-            ) : (
-              <>
-                <Download size={18} />
-                <span>Export Excel</span>
-              </>
-            )}
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={exportToExcel}
+              disabled={exportLoading || loading || !reportData}
+              className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-semibold rounded-lg transition-colors duration-200 whitespace-nowrap"
+            >
+              {exportLoading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>Exporting...</span>
+                </>
+              ) : (
+                <>
+                  <Download size={18} />
+                  <span>Export Excel</span>
+                </>
+              )}
+            </button>
+
+            {/* === TOMBOL EXPORT PDF === */}
+            <button
+              onClick={exportToPDF}
+              disabled={exportLoading || loading || !reportData}
+              className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white font-semibold rounded-lg transition-colors duration-200 whitespace-nowrap"
+            >
+              {exportLoading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>Exporting...</span>
+                </>
+              ) : (
+                <>
+                  <Download size={18} />
+                  <span>Export PDF</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </motion.div>
 

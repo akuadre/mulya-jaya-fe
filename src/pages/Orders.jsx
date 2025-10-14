@@ -3,6 +3,8 @@ import axios from "axios";
 import { Search, StepForward } from "lucide-react";
 import { motion } from "framer-motion";
 
+import axiosClient from "../lib/axiosClient";
+
 // Impor komponen UI
 // Pastikan path ini sesuai dengan struktur folder Anda
 import Modal from "../components/Modal";
@@ -46,10 +48,6 @@ const Orders = () => {
     cancelled: "bg-red-100 text-red-800"
   }), []);
 
-  const axiosHeaders = useMemo(() => ({
-    headers: { Authorization: `Bearer ${authToken}` },
-  }), [authToken]);
-
 
   // --- FUNGSI-FUNGSI LOGIKA ---
 
@@ -58,7 +56,7 @@ const Orders = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get('http://localhost:8000/api/orders', axiosHeaders);
+      const response = await axiosClient.get('api/orders');
       setOrders(Array.isArray(response.data.data) ? response.data.data : []);
     } catch (err) {
       setError(err.message || 'Gagal mengambil data pesanan.');
@@ -90,9 +88,8 @@ const Orders = () => {
     if (!selectedOrder || !newStatus) return;
     setIsSubmitting(true);
     try {
-      await axios.put(`http://localhost:8000/api/orders/${selectedOrder.id}/status`, 
-        { status: newStatus },
-        axiosHeaders
+      await axiosClient.put(`api/orders/${selectedOrder.id}/status`, 
+        { status: newStatus }
       );
       setOrders(prev => prev.map(o => (o.id === selectedOrder.id ? { ...o, status: newStatus } : o)));
       setIsModalOpen(false);

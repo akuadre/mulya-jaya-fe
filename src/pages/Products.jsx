@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import Modal from "../components/Modal";
 import FormInput from "../components/FormInput";
 import Notification, { useNotification } from "../components/Notification";
+import axiosClient from "../lib/axiosClient";
 
 // --- KOMPONEN GAMBAR DENGAN LOADER (SKELETON) ---
 const ImageWithLoader = ({ src, alt }) => {
@@ -70,22 +71,12 @@ const Products = () => {
 
   // --- FUNGSI-FUNGSI LOGIKA ---
 
-  const axiosHeaders = useMemo(
-    () => ({
-      headers: { Authorization: `Bearer ${authToken}` },
-    }),
-    [authToken]
-  );
-
   const fetchProducts = async () => {
     if (!authToken) return (window.location.href = "/login");
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get(
-        "http://localhost:8000/api/products",
-        axiosHeaders
-      );
+      const response = await axiosClient.get("/api/products");
       setProducts(Array.isArray(response.data.data) ? response.data.data : []);
     } catch (err) {
       setError("Gagal memuat data. Pastikan server berjalan.");
@@ -143,9 +134,8 @@ const Products = () => {
     );
 
     try {
-      await axios.post("http://localhost:8000/api/products", formData, {
+      await axiosClient.post("/api/products", formData, {
         headers: {
-          ...axiosHeaders.headers,
           "Content-Type": "multipart/form-data",
         },
       });
@@ -175,12 +165,11 @@ const Products = () => {
     });
 
     try {
-      await axios.post(
-        `http://localhost:8000/api/products/${editingProduct.id}`,
+      await axiosClient.post(
+        `/api/products/${editingProduct.id}`,
         formData,
         {
           headers: {
-            ...axiosHeaders.headers,
             "Content-Type": "multipart/form-data",
           },
         }
@@ -200,9 +189,8 @@ const Products = () => {
   const confirmDelete = async () => {
     setIsSubmitting(true);
     try {
-      await axios.delete(
-        `http://localhost:8000/api/products/${productToDelete.id}`,
-        axiosHeaders
+      await axiosClient.delete(
+        `/api/products/${productToDelete.id}`
       );
       setIsDeleteModalOpen(false);
       fetchProducts();
@@ -377,7 +365,7 @@ const Products = () => {
                         <ImageWithLoader
                           src={
                             p.image_url
-                              ? `http://localhost:8000/images/products/${p.image_url}`
+                              ? `${import.meta.env.VITE_API_URL}/images/products/${p.image_url}`
                               : "https://placehold.co/80x80/f3f4f6/4f4f4f?text=N/A"
                           }
                           alt={p.name}
@@ -385,7 +373,7 @@ const Products = () => {
                         {/* <img
                           src={
                             p.image_url
-                              ? `http://localhost:8000/images/products/${p.image_url}`
+                              ? `${import.meta.env.VITE_API_URL}/images/products/${p.image_url}`
                               : "https://placehold.co/80x80/E0E7FF/4338CA?text=No+Image"
                           }
                           alt={p.name}
@@ -617,8 +605,8 @@ const Products = () => {
           <form id="editProductForm" onSubmit={handleEditSubmit} className="space-y-4">
             {editingProduct.image_url &&
               !(editingProduct.photo instanceof File) && (
-                <img
-                  src={`http://localhost:8000/images/products/${editingProduct.image_url}`}
+                <img  
+                  src={`${import.meta.env.VITE_API_URL}/images/products/${editingProduct.image_url}`}
                   alt={editingProduct.name}
                   className="w-24 h-24 object-cover rounded-lg mb-2"
                 />

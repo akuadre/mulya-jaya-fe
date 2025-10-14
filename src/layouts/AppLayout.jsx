@@ -25,13 +25,13 @@ const AppLayout = () => {
       )}
 
       {/* Area kanan: Navbar + Konten */}
-      <div className="flex flex-col flex-1 w-full lg:ml-[264px] lg:w-[calc(100%-264px)] min-w-0"> {/* TAMBAH min-w-0 */}
+      <div className="flex flex-col flex-1 w-full lg:ml-[264px] lg:w-[calc(100%-264px)] min-w-0">
         {/* Navbar fixed */}
         <Navbar onMenuClick={toggleSidebar} />
 
-        {/* Konten utama — PERBAIKI DI SINI */}
-        <main className="flex-1 overflow-x-hidden p-4 sm:p-6 pt-20 sm:pt-24 lg:pt-6"> {/* GANTI overflow-y-auto jadi overflow-x-hidden */}
-          <div className="max-w-full"> {/* PASTIKAN max-w-full */}
+        {/* Konten utama — PERBAIKAN DI SINI */}
+        <main className="flex-1 overflow-x-hidden p-4 sm:p-6 pt-24 sm:pt-28 lg:pt-22"> {/* TAMBAH pt-nya */}
+          <div className="max-w-full w-full">
             <Outlet />
           </div>
         </main>

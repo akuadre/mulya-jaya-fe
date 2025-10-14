@@ -19,8 +19,12 @@ import {
   BarChart2,
   AlertTriangle,
   Award,
+  Download,
 } from "lucide-react";
 import axiosClient from "../lib/axiosClient";
+
+// Import library untuk export Excel
+import * as XLSX from "xlsx";
 
 // Register Chart.js components
 ChartJS.register(
@@ -52,8 +56,12 @@ const ReportCard = ({ icon, title, value, color, loading }) => (
         </>
       ) : (
         <>
-          <p className="text-xl sm:text-2xl font-bold text-gray-800 truncate">{value}</p>
-          <p className="text-xs sm:text-sm font-medium text-gray-500 truncate">{title}</p>
+          <p className="text-xl sm:text-2xl font-bold text-gray-800 truncate">
+            {value}
+          </p>
+          <p className="text-xs sm:text-sm font-medium text-gray-500 truncate">
+            {title}
+          </p>
         </>
       )}
     </div>
@@ -66,6 +74,7 @@ const Reports = () => {
   const [reportData, setReportData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState("monthly"); // 'monthly', 'yearly', 'daily'
+  const [exportLoading, setExportLoading] = useState(false);
 
   useEffect(() => {
     const fetchReports = async () => {
@@ -104,6 +113,109 @@ const Reports = () => {
       minimumFractionDigits: 0,
     }).format(value || 0);
 
+  // --- FUNGSI EXPORT EXCEL ---
+  const exportToExcel = () => {
+    setExportLoading(true);
+
+    try {
+      const wb = XLSX.utils.book_new();
+
+      // === SUMMARY SHEET ===
+      const summaryData = [
+        ["LAPORAN PENJUALAN", ""],
+        ["", ""],
+        [
+          "Total Pendapatan Keseluruhan",
+          reportData?.summary?.totalRevenueAllTime || 0,
+        ],
+        [
+          "Pendapatan Bulan Ini",
+          reportData?.summary?.totalRevenueCurrentMonth || 0,
+        ],
+        [
+          "Total Pesanan Tahun Ini",
+          reportData?.summary?.totalOrdersCurrentYear || 0,
+        ],
+        [
+          "Total Pesanan Bulan Ini",
+          reportData?.summary?.totalOrdersCurrentMonth || 0,
+        ],
+        ["", ""],
+        ["Tanggal Export", new Date().toLocaleDateString("id-ID")],
+        [
+          "Periode",
+          period === "daily"
+            ? "30 Hari Terakhir"
+            : period === "monthly"
+            ? "Bulanan"
+            : "Tahunan",
+        ],
+      ];
+      const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
+
+      // Merge judul
+      wsSummary["!merges"] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 1 } }];
+
+      // Auto width kolom
+      wsSummary["!cols"] = [{ wch: 30 }, { wch: 25 }];
+
+      XLSX.utils.book_append_sheet(wb, wsSummary, "Summary");
+
+      // === SALES SHEET ===
+      if (reportData?.salesOverTime) {
+        const salesData = [
+          ["Periode", "Total Penjualan"],
+          ...reportData.salesOverTime.labels.map((label, index) => [
+            label,
+            reportData.salesOverTime.data[index] || 0,
+          ]),
+        ];
+        const wsSales = XLSX.utils.aoa_to_sheet(salesData);
+        wsSales["!cols"] = [{ wch: 25 }, { wch: 20 }];
+        XLSX.utils.book_append_sheet(wb, wsSales, "Trend Penjualan");
+      }
+
+      // === LOW STOCK ===
+      if (reportData?.lowStockProducts?.length > 0) {
+        const lowStockData = [
+          ["Nama Produk", "Stok Tersisa"],
+          ...reportData.lowStockProducts.map((product) => [
+            product.name,
+            product.stock,
+          ]),
+        ];
+        const wsLowStock = XLSX.utils.aoa_to_sheet(lowStockData);
+        wsLowStock["!cols"] = [{ wch: 30 }, { wch: 15 }];
+        XLSX.utils.book_append_sheet(wb, wsLowStock, "Stok Rendah");
+      }
+
+      // === BEST SELLING ===
+      if (reportData?.bestSellingProducts?.length > 0) {
+        const bestSellingData = [
+          ["Nama Produk", "Jumlah Terjual"],
+          ...reportData.bestSellingProducts.map((product) => [
+            product.name,
+            product.sales_count,
+          ]),
+        ];
+        const wsBestSelling = XLSX.utils.aoa_to_sheet(bestSellingData);
+        wsBestSelling["!cols"] = [{ wch: 30 }, { wch: 15 }];
+        XLSX.utils.book_append_sheet(wb, wsBestSelling, "Produk Terlaris");
+      }
+
+      // Export file
+      const fileName = `laporan_penjualan_${period}_${
+        new Date().toISOString().split("T")[0]
+      }.xlsx`;
+      XLSX.writeFile(wb, fileName);
+    } catch (error) {
+      console.error("Export error:", error);
+      alert("Gagal mengexport data ke Excel");
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
   // --- CHART CONFIGURATION ---
   const salesChartData = {
     labels: reportData?.salesOverTime?.labels || [],
@@ -135,12 +247,12 @@ const Reports = () => {
     maintainAspectRatio: false,
     plugins: { legend: { display: false } },
     scales: {
-      x: { 
+      x: {
         grid: { display: false },
         ticks: {
           maxRotation: 45,
-          minRotation: 45
-        }
+          minRotation: 45,
+        },
       },
       y: {
         beginAtZero: true,
@@ -169,16 +281,39 @@ const Reports = () => {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="space-y-6 w-full min-w-0 p-2" // PERBAIKAN: hapus p-2, tambah w-full min-w-0
+      className="space-y-6 w-full min-w-0 p-2"
     >
-      {/* Header */}
+      {/* Header dengan Tombol Export */}
       <motion.div variants={itemVariants} className="w-full min-w-0">
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800 tracking-tight">
-          Laporan Penjualan
-        </h1>
-        <p className="text-gray-600 mt-2 text-sm sm:text-base">
-          Analisis lengkap performa penjualan dan inventori
-        </p>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800 tracking-tight">
+              Laporan Penjualan
+            </h1>
+            <p className="text-gray-600 mt-2 text-sm sm:text-base">
+              Analisis lengkap performa penjualan dan inventori
+            </p>
+          </div>
+
+          {/* Tombol Export Excel */}
+          <button
+            onClick={exportToExcel}
+            disabled={exportLoading || loading || !reportData}
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-semibold rounded-lg transition-colors duration-200 whitespace-nowrap"
+          >
+            {exportLoading ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <span>Exporting...</span>
+              </>
+            ) : (
+              <>
+                <Download size={18} />
+                <span>Export Excel</span>
+              </>
+            )}
+          </button>
+        </div>
       </motion.div>
 
       {/* Summary Cards */}
@@ -187,7 +322,9 @@ const Reports = () => {
         className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6 w-full min-w-0"
       >
         <ReportCard
-          icon={<DollarSign size={20} className="text-green-800 sm:w-6 sm:h-6" />}
+          icon={
+            <DollarSign size={20} className="text-green-800 sm:w-6 sm:h-6" />
+          }
           title="Total Pendapatan"
           value={formatCurrency(reportData?.summary?.totalRevenueAllTime)}
           color="bg-green-100"
@@ -201,7 +338,9 @@ const Reports = () => {
           loading={loading}
         />
         <ReportCard
-          icon={<ShoppingCart size={20} className="text-indigo-800 sm:w-6 sm:h-6" />}
+          icon={
+            <ShoppingCart size={20} className="text-indigo-800 sm:w-6 sm:h-6" />
+          }
           title="Pesanan Tahun Ini"
           value={
             loading
@@ -319,7 +458,10 @@ const Reports = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="2" className="text-center p-4 text-gray-500 text-sm sm:text-base">
+                    <td
+                      colSpan="2"
+                      className="text-center p-4 text-gray-500 text-sm sm:text-base"
+                    >
                       Semua stok aman.
                     </td>
                   </tr>
@@ -357,7 +499,9 @@ const Reports = () => {
                   <img
                     src={
                       item.image_url
-                        ? `${import.meta.env.VITE_API_URL}/images/products/${item.image_url}`
+                        ? `${import.meta.env.VITE_API_URL}/images/products/${
+                            item.image_url
+                          }`
                         : "https://placehold.co/100x100/e2e8f0/94a3b8?text=No+Img"
                     }
                     alt={item.name}

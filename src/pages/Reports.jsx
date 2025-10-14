@@ -346,7 +346,7 @@ const Reports = () => {
                   <img
                     src={
                       item.image_url
-                        ? `http://localhost:8000/images/products/${item.image_url}`
+                        ? `${import.meta.env.VITE_API_URL}/images/products/${item.image_url}`
                         : "https://placehold.co/100x100/e2e8f0/94a3b8?text=No+Img"
                     }
                     alt={item.name}

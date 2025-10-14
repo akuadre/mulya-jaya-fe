@@ -17,17 +17,17 @@ const Users = () => {
     const fetchUsers = async () => {
       setLoading(true);
       setError(null);
-      const token = localStorage.getItem("adminToken");
-      if (!token) return (window.location.href = "/login");
 
       try {
-        const response = await fetch("http://localhost:8000/api/users", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        if (!response.ok) throw new Error("Gagal mengambil data pengguna.");
-        const result = await response.json();
+        const token = localStorage.getItem("adminToken");
+        if (!token) {
+          window.location.href = "/login";
+          return;
+        }
+
+        const response = await axiosClient.get("/api/users");
+        const result = response.data;
+
         if (result.success) {
           setUsers(result.data);
         } else {
@@ -35,7 +35,7 @@ const Users = () => {
         }
       } catch (err) {
         console.error("Fetch error:", err);
-        setError(err.message);
+        setError(err.response?.data?.message || err.message);
       } finally {
         setLoading(false);
       }

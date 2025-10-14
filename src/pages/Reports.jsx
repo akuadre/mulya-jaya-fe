@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import axiosClient from "../lib/axiosClient";
 
-// Register Chart.js components (sudah ada di Dashboard, tapi lebih baik ada di sini juga)
+// Register Chart.js components
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -36,22 +36,24 @@ ChartJS.register(
 // --- HELPER COMPONENTS ---
 
 const ReportCard = ({ icon, title, value, color, loading }) => (
-  <div className="bg-white p-6 rounded-2xl shadow-lg flex items-center gap-5">
+  <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-lg flex items-center gap-4 sm:gap-5 w-full">
     {loading ? (
-      <div className="w-14 h-14 bg-gray-200 rounded-full animate-pulse"></div>
+      <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gray-200 rounded-full animate-pulse flex-shrink-0"></div>
     ) : (
-      <div className={`p-4 rounded-full ${color}`}>{icon}</div>
+      <div className={`p-3 sm:p-4 rounded-full ${color} flex-shrink-0`}>
+        {icon}
+      </div>
     )}
-    <div>
+    <div className="min-w-0 flex-1">
       {loading ? (
         <>
-          <div className="w-32 h-6 bg-gray-200 rounded animate-pulse mb-2"></div>
-          <div className="w-20 h-4 bg-gray-200 rounded animate-pulse"></div>
+          <div className="w-24 sm:w-32 h-6 bg-gray-200 rounded animate-pulse mb-2"></div>
+          <div className="w-16 sm:w-20 h-4 bg-gray-200 rounded animate-pulse"></div>
         </>
       ) : (
         <>
-          <p className="text-2xl font-bold text-gray-800">{value}</p>
-          <p className="text-sm font-medium text-gray-500">{title}</p>
+          <p className="text-xl sm:text-2xl font-bold text-gray-800 truncate">{value}</p>
+          <p className="text-xs sm:text-sm font-medium text-gray-500 truncate">{title}</p>
         </>
       )}
     </div>
@@ -77,7 +79,7 @@ const Reports = () => {
         }
 
         const response = await axiosClient.get(`/api/reports`, {
-          params: { period }, // <-- lebih clean daripada string manual
+          params: { period },
         });
 
         const result = response.data;
@@ -133,7 +135,13 @@ const Reports = () => {
     maintainAspectRatio: false,
     plugins: { legend: { display: false } },
     scales: {
-      x: { grid: { display: false } },
+      x: { 
+        grid: { display: false },
+        ticks: {
+          maxRotation: 45,
+          minRotation: 45
+        }
+      },
       y: {
         beginAtZero: true,
         ticks: { callback: (value) => formatCurrency(value) },
@@ -161,36 +169,39 @@ const Reports = () => {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="space-y-8 p-2"
+      className="space-y-6 w-full min-w-0 p-2" // PERBAIKAN: hapus p-2, tambah w-full min-w-0
     >
-      <motion.h1
-        variants={itemVariants}
-        className="text-4xl font-bold text-gray-800 tracking-tight"
-      >
-        Laporan Penjualan
-      </motion.h1>
+      {/* Header */}
+      <motion.div variants={itemVariants} className="w-full min-w-0">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800 tracking-tight">
+          Laporan Penjualan
+        </h1>
+        <p className="text-gray-600 mt-2 text-sm sm:text-base">
+          Analisis lengkap performa penjualan dan inventori
+        </p>
+      </motion.div>
 
       {/* Summary Cards */}
       <motion.div
         variants={itemVariants}
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+        className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6 w-full min-w-0"
       >
         <ReportCard
-          icon={<DollarSign size={24} className="text-green-800" />}
+          icon={<DollarSign size={20} className="text-green-800 sm:w-6 sm:h-6" />}
           title="Total Pendapatan"
           value={formatCurrency(reportData?.summary?.totalRevenueAllTime)}
           color="bg-green-100"
           loading={loading}
         />
         <ReportCard
-          icon={<TrendingUp size={24} className="text-sky-800" />}
+          icon={<TrendingUp size={20} className="text-sky-800 sm:w-6 sm:h-6" />}
           title="Pendapatan Bulan Ini"
           value={formatCurrency(reportData?.summary?.totalRevenueCurrentMonth)}
           color="bg-sky-100"
           loading={loading}
         />
         <ReportCard
-          icon={<ShoppingCart size={24} className="text-indigo-800" />}
+          icon={<ShoppingCart size={20} className="text-indigo-800 sm:w-6 sm:h-6" />}
           title="Pesanan Tahun Ini"
           value={
             loading
@@ -201,7 +212,7 @@ const Reports = () => {
           loading={loading}
         />
         <ReportCard
-          icon={<Package size={24} className="text-amber-800" />}
+          icon={<Package size={20} className="text-amber-800 sm:w-6 sm:h-6" />}
           title="Pesanan Bulan Ini"
           value={
             loading
@@ -216,13 +227,13 @@ const Reports = () => {
       {/* Main Sales Chart */}
       <motion.div
         variants={itemVariants}
-        className="bg-white lg:col-span-2 p-6 rounded-2xl shadow-lg"
+        className="bg-white p-4 sm:p-6 rounded-2xl shadow-lg w-full min-w-0"
       >
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-5">
-          <h3 className="text-xl font-semibold text-gray-800 mb-3 sm:mb-0">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-5">
+          <h3 className="text-lg sm:text-xl font-semibold text-gray-800">
             Grafik Performa Penjualan
           </h3>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             {[
               { key: "daily", label: "30 Hari" },
               { key: "monthly", label: "Bulanan" },
@@ -231,7 +242,7 @@ const Reports = () => {
               <button
                 key={p.key}
                 onClick={() => setPeriod(p.key)}
-                className={`px-4 py-1.5 text-sm font-semibold rounded-full transition-all ${
+                className={`px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-full transition-all whitespace-nowrap ${
                   period === p.key
                     ? "bg-green-600 text-white shadow-md"
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -242,7 +253,7 @@ const Reports = () => {
             ))}
           </div>
         </div>
-        <div className="h-96">
+        <div className="h-64 sm:h-80 lg:h-96">
           {loading ? (
             <div className="w-full h-full bg-gray-200 rounded-lg animate-pulse"></div>
           ) : (
@@ -252,26 +263,26 @@ const Reports = () => {
       </motion.div>
 
       {/* Bottom Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full min-w-0">
         {/* Low Stock Products */}
         <motion.div
           variants={itemVariants}
-          className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-lg"
+          className="lg:col-span-2 bg-white p-4 sm:p-6 rounded-2xl shadow-lg w-full min-w-0"
         >
           <div className="flex items-center gap-3 mb-4">
-            <AlertTriangle className="text-red-500" size={22} />
-            <h3 className="text-xl font-semibold text-gray-800">
+            <AlertTriangle className="text-red-500 w-5 h-5 sm:w-6 sm:h-6" />
+            <h3 className="text-lg sm:text-xl font-semibold text-gray-800">
               Produk Stok Rendah
             </h3>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full text-left">
+            <table className="w-full min-w-[400px] text-left">
               <thead>
                 <tr className="border-b-2 border-gray-100">
                   {["Produk", "Stok Tersisa"].map((head) => (
                     <th
                       key={head}
-                      className="p-3 text-sm font-semibold text-gray-500 uppercase"
+                      className="p-3 text-xs sm:text-sm font-semibold text-gray-500 uppercase whitespace-nowrap"
                     >
                       {head}
                     </th>
@@ -296,11 +307,11 @@ const Reports = () => {
                       key={product.id}
                       className="hover:bg-gray-50 border-b border-gray-100"
                     >
-                      <td className="p-3 font-medium text-gray-700">
+                      <td className="p-3 font-medium text-gray-700 max-w-[200px] truncate">
                         {product.name}
                       </td>
                       <td className="p-3">
-                        <span className="font-bold text-red-600 bg-red-100 px-3 py-1 rounded-full text-sm">
+                        <span className="font-bold text-red-600 bg-red-100 px-2 py-1 rounded-full text-xs sm:text-sm">
                           {product.stock}
                         </span>
                       </td>
@@ -308,7 +319,7 @@ const Reports = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="2" className="text-center p-4 text-gray-500">
+                    <td colSpan="2" className="text-center p-4 text-gray-500 text-sm sm:text-base">
                       Semua stok aman.
                     </td>
                   </tr>
@@ -321,20 +332,20 @@ const Reports = () => {
         {/* Best Selling Products */}
         <motion.div
           variants={itemVariants}
-          className="bg-white p-6 rounded-2xl shadow-lg"
+          className="bg-white p-4 sm:p-6 rounded-2xl shadow-lg w-full min-w-0"
         >
           <div className="flex items-center gap-3 mb-4">
-            <Award className="text-amber-500" size={22} />
-            <h3 className="text-xl font-semibold text-gray-800">
+            <Award className="text-amber-500 w-5 h-5 sm:w-6 sm:h-6" />
+            <h3 className="text-lg sm:text-xl font-semibold text-gray-800">
               Produk Terlaris
             </h3>
           </div>
-          <ul className="space-y-4">
+          <ul className="space-y-3 sm:space-y-4">
             {loading ? (
               [...Array(5)].map((_, i) => (
-                <li key={i} className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-gray-200 rounded-lg animate-pulse"></div>
-                  <div className="flex-1">
+                <li key={i} className="flex items-center gap-3 sm:gap-4">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-200 rounded-lg animate-pulse flex-shrink-0"></div>
+                  <div className="flex-1 min-w-0">
                     <div className="h-4 bg-gray-200 rounded w-3/4 mb-1.5"></div>
                     <div className="h-3 bg-gray-200 rounded w-1/2"></div>
                   </div>
@@ -342,7 +353,7 @@ const Reports = () => {
               ))
             ) : reportData?.bestSellingProducts?.length > 0 ? (
               reportData.bestSellingProducts.map((item) => (
-                <li key={item.id} className="flex items-center gap-4">
+                <li key={item.id} className="flex items-center gap-3 sm:gap-4">
                   <img
                     src={
                       item.image_url
@@ -350,18 +361,20 @@ const Reports = () => {
                         : "https://placehold.co/100x100/e2e8f0/94a3b8?text=No+Img"
                     }
                     alt={item.name}
-                    className="w-12 h-12 object-cover rounded-lg bg-gray-100"
+                    className="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded-lg bg-gray-100 flex-shrink-0"
                   />
-                  <div className="flex-1">
-                    <p className="font-semibold text-gray-800">{item.name}</p>
-                    <p className="text-sm text-gray-500">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-gray-800 text-sm sm:text-base truncate">
+                      {item.name}
+                    </p>
+                    <p className="text-xs sm:text-sm text-gray-500">
                       {item.sales_count}x terjual
                     </p>
                   </div>
                 </li>
               ))
             ) : (
-              <p className="text-center p-4 text-gray-500">
+              <p className="text-center p-4 text-gray-500 text-sm sm:text-base">
                 Belum ada produk yang terjual.
               </p>
             )}

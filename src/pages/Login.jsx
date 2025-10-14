@@ -185,6 +185,13 @@ const Login = () => {
             </motion.button>
           </div>
         </form>
+
+        {/* Footer untuk mobile */}
+        <div className="mt-6 sm:mt-8 pt-4 border-t border-slate-700/50">
+          <p className="text-center text-slate-400 text-xs">
+            © 2025 Mulya Jaya App. All rights reserved.
+          </p>
+        </div>
       </motion.div>
     </div>
   );

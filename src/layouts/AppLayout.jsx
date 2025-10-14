@@ -12,8 +12,8 @@ const AppLayout = () => {
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-      {/* Sidebar tetap fixed */}
-      <Sidebar isSidebarOpen={isSidebarOpen} />
+      {/* Sidebar */}
+      <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
       {/* Overlay (untuk mobile) */}
       {isSidebarOpen && (
@@ -25,13 +25,15 @@ const AppLayout = () => {
       )}
 
       {/* Area kanan: Navbar + Konten */}
-      <div className="flex flex-col flex-1 transition-all duration-300 lg:ml-[264px]">
+      <div className="flex flex-col flex-1 w-full lg:ml-[264px] lg:w-[calc(100%-264px)] min-w-0"> {/* TAMBAH min-w-0 */}
         {/* Navbar fixed */}
         <Navbar onMenuClick={toggleSidebar} />
 
-        {/* Konten utama — tambahkan padding-top agar tidak ketiban navbar */}
-        <main className="flex-1 overflow-y-auto p-6 pt-[88px]">
-          <Outlet />
+        {/* Konten utama — PERBAIKI DI SINI */}
+        <main className="flex-1 overflow-x-hidden p-4 sm:p-6 pt-20 sm:pt-24 lg:pt-6"> {/* GANTI overflow-y-auto jadi overflow-x-hidden */}
+          <div className="max-w-full"> {/* PASTIKAN max-w-full */}
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>

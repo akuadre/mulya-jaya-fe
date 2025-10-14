@@ -56,7 +56,7 @@ const Orders = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await axiosClient.get('api/orders');
+      const response = await axiosClient.get('/api/orders');
       setOrders(Array.isArray(response.data.data) ? response.data.data : []);
     } catch (err) {
       setError(err.message || 'Gagal mengambil data pesanan.');

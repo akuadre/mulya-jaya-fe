@@ -1,7 +1,8 @@
 import { useState } from "react";
-import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mail, Lock, Loader, AlertCircle, Eye, EyeOff } from "lucide-react";
+
+import axiosClient from "../lib/axiosClient";
 
 // --- Komponen Input Underline Style (disesuaikan untuk Dim Mode) ---
 const UnderlineInput = ({
@@ -46,7 +47,8 @@ const Login = () => {
     setLoading(true);
     setError("");
     try {
-      const res = await axios.post("http://localhost:8000/api/admin/login", {
+      const res = await axiosClient.post("/api/admin/login", {
+
         email,
         password,
       });

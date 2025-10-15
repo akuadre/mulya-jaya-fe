@@ -128,7 +128,7 @@ const Login = () => {
               className="absolute inset-0 p-5 w-full h-full object-contain"
             />
           </motion.div>
-          <h1 className="text-3xl font-bold text-slate-100">Mulya Jaya App</h1>
+          <h1 className="text-3xl font-bold text-slate-100">Mulya Jaya</h1>
           <p className="text-slate-400 mt-1">Selamat datang kembali, Admin!</p>
         </div>
 

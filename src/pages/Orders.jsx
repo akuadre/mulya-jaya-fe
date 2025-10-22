@@ -21,8 +21,8 @@ axiosClient.interceptors.request.use(config => {
 
 
 // Impor komponen UI
-import Modal from "../components/ui/Modal";
-import Notification, { useNotification } from "../components/ui/Notification";
+import Modal from "../components/Modal";
+import Notification, { useNotification } from "../components/Notification";
 
 // --- KOMPONEN CARD UNTUK MOBILE ---
 const OrderCard = ({ order, onEdit }) => {

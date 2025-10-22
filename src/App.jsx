@@ -5,6 +5,7 @@ import Orders from "./pages/Orders.jsx";
 import Users from "./pages/Users.jsx";
 import Products from "./pages/Products.jsx";
 import Reports from "./pages/Reports.jsx";
+import AuditLog from "./pages/AuditLog.jsx"; 
 import About from "./pages/About.jsx";
 
 import AppLayout from "./layouts/AppLayout.jsx";
@@ -28,7 +29,8 @@ function App() {
             <Route path="/users" element={<Users />} />
             <Route path="/products" element={<Products />} />
             <Route path="/reports" element={<Reports />} />
-            <Route path="/about" element={<About />} /> {/* Tambahin ini */}
+            <Route path="/audit-logs" element={<AuditLog />} /> 
+            <Route path="/about" element={<About />} />
           </Route>
         </Route>
 

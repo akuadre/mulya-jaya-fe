@@ -12,8 +12,22 @@ import {
   Legend,
   Filler,
 } from "chart.js";
-import { DollarSign, Package, CheckCircle, Clock, XCircle, Truck } from "lucide-react";
+import { DollarSign, Package, CheckCircle, Clock, XCircle, Truck, Database } from "lucide-react"; // 1. Impor ikon Database
 import axiosClient from "../lib/axiosClient";
+import Notification, { useNotification } from "../components/Notification";
+
+// Interceptor untuk menangani error 401
+axiosClient.interceptors.response.use(
+  response => response,
+  error => {
+    if (error.response && error.response.status === 401) {
+      localStorage.removeItem('adminToken');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
 
 // Register Chart.js components
 ChartJS.register(
@@ -67,27 +81,13 @@ const Skeleton = ({ className }) => (
 // --- MAIN DASHBOARD COMPONENT ---
 
 const Dashboard = () => {
-  // ... (State dan fungsi Anda dari baris 70 sampai 230 tetap sama)
-  const [stats, setStats] = useState({
-    totalRevenue: 0,
-    pending: 0,
-    processing: 0,
-    sending: 0,
-    completed: 0,
-    cancelled: 0,
-  });
+  const [stats, setStats] = useState({ totalRevenue: 0, pending: 0, processing: 0, sending: 0, completed: 0, cancelled: 0 });
   const [recentOrders, setRecentOrders] = useState([]);
-  const [salesData, setSalesData] = useState({
-    daily: {},
-    monthly: {},
-    annual: {},
-  });
-  const [loading, setLoading] = useState({
-    stats: true,
-    recent: true,
-    sales: true,
-  });
+  const [salesData, setSalesData] = useState({ daily: {}, monthly: {}, annual: {} });
+  const [loading, setLoading] = useState({ stats: true, recent: true, sales: true });
   const [salesFilter, setSalesFilter] = useState("annual");
+  const [isBackingUp, setIsBackingUp] = useState(false);
+  const { showNotification, notification, dismissNotification } = useNotification();
 
   useEffect(() => {
     const token = localStorage.getItem("adminToken");
@@ -119,13 +119,44 @@ const Dashboard = () => {
     fetchData("dashboard-sales", "sales");
   }, []);
 
-  const formatCurrency = (value) =>
-    new Intl.NumberFormat("id-ID", {
-      style: "currency",
-      currency: "IDR",
-      minimumFractionDigits: 0,
-    }).format(value);
+  // Fungsi untuk handle backup
+  const handleBackup = async () => {
+    setIsBackingUp(true);
+    showNotification('Sedang membuat file backup database...', 'info');
+    try {
+        const response = await axiosClient.post('/api/backup-database', {}, {
+            responseType: 'blob', // Penting untuk menangani file download
+        });
 
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+
+        const contentDisposition = response.headers['content-disposition'];
+        let filename = `mulyajaya_backup_${new Date().toISOString()}.sql`;
+        if (contentDisposition) {
+            const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+            if (filenameMatch && filenameMatch.length === 2) filename = filenameMatch[1];
+        }
+        
+        link.setAttribute('download', filename);
+        document.body.appendChild(link);
+        link.click();
+
+        link.remove();
+        window.URL.revokeObjectURL(url);
+        
+        showNotification('File backup berhasil diunduh.', 'success');
+    } catch (error) {
+        console.error('Backup failed:', error);
+        showNotification('Tidak dapat membuat file backup.', 'error');
+    } finally {
+        setIsBackingUp(false);
+    }
+  };
+
+
+  const formatCurrency = (value) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(value);
   const getStatusChip = (status) => {
     const styles = {
       pending: "bg-yellow-100 text-yellow-700",
@@ -142,11 +173,7 @@ const Dashboard = () => {
       cancelled: "Dibatalkan",
     };
     return (
-      <span
-        className={`px-3 py-1 text-xs font-semibold rounded-full ${styles[status]}`}
-      >
-        {text[status]}
-      </span>
+      <span className={`px-3 py-1 text-xs font-semibold rounded-full ${styles[status]}`}>{text[status]}</span>
     );
   };
 
@@ -154,8 +181,7 @@ const Dashboard = () => {
 
   const salesChartData = {
     labels: activeSalesData.labels,
-    datasets: [
-      {
+    datasets: [{
         label: "Total Penjualan",
         data: activeSalesData.data,
         borderColor: "#10B981",
@@ -182,32 +208,16 @@ const Dashboard = () => {
     plugins: { legend: { display: false } },
     scales: {
       x: { grid: { display: false } },
-      y: {
-        beginAtZero: true,
-        ticks: { callback: (value) => formatCurrency(value) },
-      },
+      y: { beginAtZero: true, ticks: { callback: (value) => formatCurrency(value) } },
     },
     interaction: { intersect: false, mode: "index" },
   };
 
   const doughnutChartData = {
     labels: ["Pending", "Diproses", "Dikirim", "Selesai", "Dibatalkan"],
-    datasets: [
-      {
-        data: [
-          stats.pending,
-          stats.processing,
-          stats.sending,
-          stats.completed,
-          stats.cancelled,
-        ],
-        backgroundColor: [
-          "#FBBF24", // kuning
-          "#6366F1", // indigo
-          "#3B82F6", // biru
-          "#10B981", // hijau
-          "#EF4444", // merah
-        ],
+    datasets: [{
+        data: [ stats.pending, stats.processing, stats.sending, stats.completed, stats.cancelled ],
+        backgroundColor: [ "#FBBF24", "#6366F1", "#3B82F6", "#10B981", "#EF4444" ],
         borderColor: "#fff",
         borderWidth: 4,
         hoverOffset: 10,
@@ -215,217 +225,108 @@ const Dashboard = () => {
     ],
   };
 
-  // --- PERUBAHAN ANIMASI DI SINI ---
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.1 }, // Dibuat lebih cepat dan sinkron
-    },
-  };
-
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      // Transisi 'spring' dihapus agar menjadi 'tween' standar
-    },
-  };
+  const containerVariants = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.1 } } };
+  const itemVariants = { hidden: { y: 20, opacity: 0 }, visible: { y: 0, opacity: 1 } };
 
   return (
-    // PERUBAHAN: Menghapus p-2
-    <motion.div
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-      className="space-y-8 p-2"
-    >
-      {/* --- Header --- */}
-      <motion.h1
-        variants={itemVariants}
-        className="text-4xl font-bold text-gray-800 tracking-tight"
-      >
+    <>
+    <Notification notification={notification} onDismiss={dismissNotification} />
+    <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-8">
+      <motion.h1 variants={itemVariants} className="text-3xl lg:text-4xl font-bold text-gray-800 tracking-tight">
         Selamat Datang, Admin!
       </motion.h1>
 
-      {/* --- Stat Cards Grid --- */}
-      <motion.div
-        variants={itemVariants}
-        className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6"
-      >
-        <StatCard
-          icon={<DollarSign size={28} className="text-green-600" />}
-          title="Total Pendapatan"
-          value={formatCurrency(stats.totalRevenue)}
-          color="#10B981"
-          loading={loading.stats}
-        />
-        <StatCard
-          icon={<Clock size={28} className="text-yellow-600" />}
-          title="Pesanan Pending"
-          value={stats.pending}
-          color="#FBBF24"
-          loading={loading.stats}
-        />
-        <StatCard
-          icon={<CheckCircle size={28} className="text-emerald-600" />}
-          title="Pesanan Selesai"
-          value={stats.completed}
-          color="#10B981"
-          loading={loading.stats}
-        />
-        <StatCard
-          icon={<Package size={28} className="text-indigo-600" />}
-          title="Pesanan Diproses"
-          value={stats.processing}
-          color="#6366F1"
-          loading={loading.stats}
-        />
-        <StatCard
-          icon={<Truck size={28} className="text-blue-600" />}
-          title="Pesanan Dikirim"
-          value={stats.sending}
-          color="#3B82F6"
-          loading={loading.stats}
-        />
-        <StatCard
-          icon={<XCircle size={28} className="text-red-600" />}
-          title="Pesanan Dibatalkan"
-          value={stats.cancelled}
-          color="#EF4444"
-          loading={loading.stats}
-        />
+      <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        <StatCard icon={<DollarSign size={28} className="text-green-600" />} title="Total Pendapatan" value={formatCurrency(stats.totalRevenue)} color="#10B981" loading={loading.stats}/>
+        <StatCard icon={<Clock size={28} className="text-yellow-600" />} title="Pesanan Pending" value={stats.pending} color="#FBBF24" loading={loading.stats}/>
+        <StatCard icon={<CheckCircle size={28} className="text-emerald-600" />} title="Pesanan Selesai" value={stats.completed} color="#10B981" loading={loading.stats}/>
+        <StatCard icon={<Package size={28} className="text-indigo-600" />} title="Pesanan Diproses" value={stats.processing} color="#6366F1" loading={loading.stats}/>
+        <StatCard icon={<Truck size={28} className="text-blue-600" />} title="Pesanan Dikirim" value={stats.sending} color="#3B82F6" loading={loading.stats}/>
+        <StatCard icon={<XCircle size={28} className="text-red-600" />} title="Pesanan Dibatalkan" value={stats.cancelled} color="#EF4444" loading={loading.stats}/>
       </motion.div>
 
-      {/* --- Charts Grid --- */}
-      {/* PERUBAHAN: Menambahkan motion.div pembungkus untuk animasi stagger */}
-      <motion.div
-        variants={itemVariants}
-        className="grid grid-cols-1 lg:grid-cols-3 gap-8"
-      >
-        {/* Line Chart */}
+      <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="bg-white lg:col-span-2 p-6 rounded-2xl shadow-lg">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-semibold text-gray-800">
-              Grafik Penjualan
-            </h3>
+            <h3 className="text-xl font-semibold text-gray-800">Grafik Penjualan</h3>
             <div className="flex gap-2">
               {["annual", "monthly", "daily"].map((filter) => (
-                <button
-                  key={filter}
-                  onClick={() => setSalesFilter(filter)}
-                  className={`px-4 py-1.5 text-sm font-semibold rounded-full transition-all ${
-                    salesFilter === filter
-                      ? "bg-emerald-500 text-white shadow"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }`}
-                >
+                <button key={filter} onClick={() => setSalesFilter(filter)} className={`px-4 py-1.5 text-sm font-semibold rounded-full transition-all ${ salesFilter === filter ? "bg-emerald-500 text-white shadow" : "bg-gray-100 text-gray-600 hover:bg-gray-200" }`}>
                   {filter.charAt(0).toUpperCase() + filter.slice(1)}
                 </button>
               ))}
             </div>
           </div>
           <div className="h-[22rem]">
-            {loading.sales ? (
-              <Skeleton className="w-full h-full" />
-            ) : (
-              <Line data={salesChartData} options={salesChartOptions} />
-            )}
+            {loading.sales ? (<Skeleton className="w-full h-full" />) : (<Line data={salesChartData} options={salesChartOptions} />)}
           </div>
         </div>
 
-        {/* Doughnut Chart */}
         <div className="bg-white p-6 rounded-2xl shadow-lg">
-          <h3 className="text-xl font-semibold text-gray-800 mb-4">
-            Ringkasan Pesanan
-          </h3>
+          <h3 className="text-xl font-semibold text-gray-800 mb-4">Ringkasan Pesanan</h3>
           <div className="h-80 flex justify-center items-center">
-            {loading.stats ? (
-              <Skeleton className="w-48 h-48 rounded-full" />
-            ) : (
-              <Doughnut
-                data={doughnutChartData}
-                options={{
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  plugins: { legend: { position: "bottom" } },
-                }}
-              />
-            )}
+            {loading.stats ? (<Skeleton className="w-48 h-48 rounded-full" />) : (<Doughnut data={doughnutChartData} options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { position: "bottom" } } }}/>)}
           </div>
         </div>
       </motion.div>
 
-      {/* --- Recent Orders Table --- */}
-      <motion.div
-        variants={itemVariants}
-        className="bg-white p-6 rounded-2xl shadow-lg"
-      >
-        <h3 className="text-xl font-semibold text-gray-800 mb-4">
-          Pesanan Terbaru
-        </h3>
+      {/* --- SECTION BACKUP BARU --- */}
+      <motion.div variants={itemVariants} className="bg-white p-6 rounded-2xl shadow-lg">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <h3 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
+              <Database />
+              Backup & Keamanan
+            </h3>
+            <p className="text-gray-500 mt-1 text-sm">Unduh salinan data database Anda untuk tujuan keamanan.</p>
+          </div>
+          <button 
+            onClick={handleBackup} 
+            disabled={isBackingUp}
+            className="bg-green-600 text-white font-semibold px-5 py-2.5 rounded-lg hover:bg-green-700 transition flex items-center gap-2 disabled:bg-gray-400 disabled:cursor-wait"
+          >
+            {isBackingUp ? "Memproses..." : "Download Backup"}
+          </button>
+        </div>
+      </motion.div>
+
+      <motion.div variants={itemVariants} className="bg-white p-6 rounded-2xl shadow-lg">
+        <h3 className="text-xl font-semibold text-gray-800 mb-4">Pesanan Terbaru</h3>
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead className="border-b-2 border-gray-100">
               <tr>
-                {["No", "Pelanggan", "Produk", "Total", "Status"].map(
-                  (head) => (
-                    <th
-                      key={head}
-                      className="p-4 text-sm font-semibold text-gray-500 uppercase"
-                    >
-                      {head}
-                    </th>
-                  )
-                )}
+                {["No", "Pelanggan", "Produk", "Total", "Status"].map((head) => (
+                  <th key={head} className="p-4 text-sm font-semibold text-gray-500 uppercase">{head}</th>
+                ))}
               </tr>
             </thead>
             <tbody>
-              {loading.recent
-                ? [...Array(5)].map((_, i) => (
-                    <tr key={i} className="border-b border-gray-100">
-                      <td className="p-4">
-                        <Skeleton className="h-5 w-10" />
-                      </td>
-                      <td className="p-4">
-                        <Skeleton className="h-5 w-32" />
-                      </td>
-                      <td className="p-4">
-                        <Skeleton className="h-5 w-40" />
-                      </td>
-                      <td className="p-4">
-                        <Skeleton className="h-5 w-24" />
-                      </td>
-                      <td className="p-4">
-                        <Skeleton className="h-7 w-20 rounded-full" />
-                      </td>
-                    </tr>
-                  ))
-                : recentOrders.map((order) => (
-                    <tr
-                      key={order.id}
-                      className="border-b border-gray-100 hover:bg-gray-50"
-                    >
-                      <td className="p-4 font-medium text-gray-700">
-                        #{order.id}
-                      </td>
-                      <td className="p-4 text-gray-600">{order.user?.name}</td>
-                      <td className="p-4 text-gray-600">
-                        {order.product?.name}
-                      </td>
-                      <td className="p-4 font-semibold text-gray-800">
-                        {formatCurrency(order.total_price)}
-                      </td>
-                      <td className="p-4">{getStatusChip(order.status)}</td>
-                    </tr>
-                  ))}
+              {loading.recent ? [...Array(5)].map((_, i) => (
+                  <tr key={i} className="border-b border-gray-100">
+                    <td className="p-4"><Skeleton className="h-5 w-10" /></td>
+                    <td className="p-4"><Skeleton className="h-5 w-32" /></td>
+                    <td className="p-4"><Skeleton className="h-5 w-40" /></td>
+                    <td className="p-4"><Skeleton className="h-5 w-24" /></td>
+                    <td className="p-4"><Skeleton className="h-7 w-20 rounded-full" /></td>
+                  </tr>
+                )) : recentOrders.map((order, index) => (
+                  <tr key={order.id} className="border-b border-gray-100 hover:bg-gray-50">
+                    <td className="p-4 font-medium text-gray-700">#{index + 1}</td>
+                    <td className="p-4 text-gray-600">{order.user?.name}</td>
+                    <td className="p-4 text-gray-600">{order.product?.name}</td>
+                    <td className="p-4 font-semibold text-gray-800">{formatCurrency(order.total_price)}</td>
+                    <td className="p-4">{getStatusChip(order.status)}</td>
+                  </tr>
+                ))}
             </tbody>
           </table>
         </div>
       </motion.div>
     </motion.div>
+    </>
   );
 };
 
 export default Dashboard;
+

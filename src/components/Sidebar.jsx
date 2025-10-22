@@ -1,9 +1,10 @@
-import { Home, Boxes, List, Users, BarChart2, Info } from "lucide-react";
+import { Home, Boxes, List, Users, BarChart2, Info, History } from "lucide-react"; // <-- 1. Impor ikon History
 import { NavLink } from "react-router-dom";
 
-const NavItem = ({ to, icon: Icon, children }) => (
+const NavItem = ({ to, icon: Icon, children, onClick }) => (
   <NavLink
     to={to}
+    onClick={onClick}
     className={({ isActive }) =>
       `flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
         isActive
@@ -17,42 +18,34 @@ const NavItem = ({ to, icon: Icon, children }) => (
   </NavLink>
 );
 
-const Sidebar = ({ isSidebarOpen }) => {
+const Sidebar = ({ isSidebarOpen, closeSidebar }) => { // Tambahkan prop closeSidebar
   return (
     <aside
       className={`fixed top-0 left-0 h-screen w-[264px] bg-slate-900 flex flex-col border-r border-slate-800 z-50 transform transition-transform duration-300 ease-in-out
         ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}
         lg:translate-x-0`}
     >
-      {/* Logo */}
       <div className="p-6 flex items-center gap-4 border-b border-slate-800 shrink-0">
         <div className="bg-green-500/10 p-3 rounded-lg text-green-400">
-          <img
-            src="/images/mulyajaya.png"
-            className="w-12"
-            alt="Logo Mulya Jaya"
-          />
+          <img src="/images/mulyajaya.png" className="w-12" alt="Logo Mulya Jaya"/>
         </div>
         <h1 className="text-xl font-bold text-slate-100 tracking-wider">
           Mulya Jaya <span className="text-green-400">Admin</span>
         </h1>
       </div>
 
-      {/* Menu — scrollable kalau konten panjang */}
       <nav className="flex-1 overflow-y-auto px-4 py-4 space-y-2">
-        <p className="mb-2 px-2 text-xs font-bold text-slate-500 uppercase">
-          Menu
-        </p>
-        <NavItem to="/dashboard" icon={Home}>Dashboard</NavItem>
-        <NavItem to="/products" icon={Boxes}>Produk</NavItem>
-        <NavItem to="/orders" icon={List}>Pesanan</NavItem>
-        <NavItem to="/users" icon={Users}>Pelanggan</NavItem>
-        <NavItem to="/reports" icon={BarChart2}>Laporan</NavItem>
+        <p className="mb-2 px-2 text-xs font-bold text-slate-500 uppercase">Menu</p>
+        <NavItem to="/dashboard" icon={Home} onClick={closeSidebar}>Dashboard</NavItem>
+        <NavItem to="/products" icon={Boxes} onClick={closeSidebar}>Produk</NavItem>
+        <NavItem to="/orders" icon={List} onClick={closeSidebar}>Pesanan</NavItem>
+        <NavItem to="/users" icon={Users} onClick={closeSidebar}>Pelanggan</NavItem>
+        <NavItem to="/reports" icon={BarChart2} onClick={closeSidebar}>Laporan</NavItem>
+        <NavItem to="/audit-logs" icon={History} onClick={closeSidebar}>Audit Log</NavItem> {/* <-- 2. Tambahkan menu baru */}
       </nav>
 
-      {/* Footer tetap di bawah */}
       <div className="p-4 border-t border-slate-800">
-        <NavItem to="/about" icon={Info}>Tentang Aplikasi</NavItem>
+        <NavItem to="/about" icon={Info} onClick={closeSidebar}>Tentang Aplikasi</NavItem>
       </div>
     </aside>
   );

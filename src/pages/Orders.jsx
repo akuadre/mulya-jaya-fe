@@ -169,24 +169,19 @@ const Orders = () => {
   };
 
   const handleUpdateStatus = async () => {
-    if (!selectedOrder || !newStatus) return;
-
-    // PERBAIKAN: Cek jika statusnya sama dengan yang lama
-    if (newStatus === selectedOrder.status) {
-      setIsModalOpen(false); // Cukup tutup modal
-      showNotification({ title: 'Info', message: 'Tidak ada perubahan status yang dilakukan.', type: 'info' });
-      return; // Hentikan eksekusi
-    }
+    if (!selectedOrder || !newStatus || newStatus === selectedOrder.status) return;
 
     setIsSubmitting(true);
     try {
       await axiosClient.put(`api/orders/${selectedOrder.id}/status`, { status: newStatus });
       setOrders(prev => prev.map(o => (o.id === selectedOrder.id ? { ...o, status: newStatus } : o)));
       setIsModalOpen(false);
-      showNotification({ title: 'Berhasil!', message: 'Status pesanan telah diperbarui.', type: 'success' });
+      // PERBAIKAN: Menggunakan format notifikasi yang benar (string, string)
+      showNotification('Status pesanan telah diperbarui.', 'success');
     } catch (err) {
       const errorMsg = err.response?.data?.message || 'Gagal memperbarui status.';
-      showNotification({ title: 'Gagal!', message: errorMsg, type: 'error' });
+       // PERBAIKAN: Menggunakan format notifikasi yang benar (string, string)
+      showNotification(errorMsg, 'error');
     } finally { 
       setIsSubmitting(false);
     }
@@ -290,7 +285,6 @@ const Orders = () => {
                   </tbody>
                 </table>
               </div>
-
               <div className="lg:hidden space-y-4">
                 {paginatedOrders.length > 0 ? (
                   paginatedOrders.map((order, index) => (<OrderCard key={order.id} order={order} index={index} onEdit={handleEdit} />))
@@ -316,7 +310,14 @@ const Orders = () => {
           footer={
             <div className="flex flex-col sm:flex-row justify-end gap-3">
               <button onClick={() => { setIsModalOpen(false); setSelectedOrder(null); }} className="bg-gray-200 text-gray-800 font-semibold px-4 py-2 rounded-lg hover:bg-gray-300 transition text-sm sm:text-base" disabled={isSubmitting}>Batal</button>
-              <button onClick={handleUpdateStatus} className="bg-green-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-green-700 disabled:bg-gray-400 transition text-sm sm:text-base" disabled={isSubmitting}>{isSubmitting ? "Menyimpan..." : "Simpan"}</button>
+              {/* PERBAIKAN: Menambahkan kondisi disable jika status sama */}
+              <button 
+                onClick={handleUpdateStatus} 
+                className="bg-green-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition text-sm sm:text-base" 
+                disabled={isSubmitting || newStatus === selectedOrder.status}
+              >
+                {isSubmitting ? "Menyimpan..." : "Simpan"}
+              </button>
             </div>
           }
         >
@@ -336,4 +337,3 @@ const Orders = () => {
 };
 
 export default Orders;
-

@@ -32,12 +32,23 @@ const AuditLog = () => {
 
   const axiosHeaders = useMemo(() => ({ headers: { Authorization: `Bearer ${authToken}` } }), [authToken]);
 
+  // Fungsi untuk menangani error, terutama 401 Unauthorized
+  const handleError = (error, message) => {
+    if (error.response && error.response.status === 401) {
+      // Token tidak valid atau kedaluwarsa, redirect ke login
+      window.location.href = "/login";
+    } else {
+      // Tampilkan notifikasi untuk error lainnya
+      showNotification(message, 'error');
+    }
+  };
+
   // Fetch Statistik
   useEffect(() => {
     if (!authToken) return;
     axios.get('http://localhost:8000/api/audit-logs/statistics', axiosHeaders)
       .then(res => setStats(res.data.data))
-      .catch(() => showNotification({ title: 'Error', message: 'Gagal memuat statistik log.', type: 'error' }))
+      .catch((err) => handleError(err, 'Gagal memuat statistik log.'))
       .finally(() => setLoading(prev => ({ ...prev, stats: false })));
   }, [authToken]);
 
@@ -61,14 +72,21 @@ const AuditLog = () => {
           total: res.data.data.total,
         });
       })
-      .catch(() => showNotification({ title: 'Error', message: 'Gagal memuat data log.', type: 'error' }))
+      .catch((err) => handleError(err, 'Gagal memuat data log.'))
       .finally(() => setLoading(prev => ({ ...prev, table: false })));
   }, [authToken, filters, pagination.current_page, pagination.per_page]);
 
   // Handler
-  const handleFilterChange = (e) => setFilters(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  const handleFilterChange = (e) => {
+    setPagination(prev => ({ ...prev, current_page: 1 })); // Reset ke halaman 1 saat filter berubah
+    setFilters(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  }
   const handleViewDetail = (log) => { setSelectedLog(log); setIsDetailModalOpen(true); };
-  const handlePageChange = (newPage) => setPagination(prev => ({...prev, current_page: newPage}));
+  const handlePageChange = (newPage) => {
+    if (newPage > 0 && newPage <= pagination.last_page) {
+      setPagination(prev => ({...prev, current_page: newPage}));
+    }
+  };
 
   // Fungsi utilitas
   const formatDate = (dateString) => new Date(dateString).toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' });
@@ -76,6 +94,27 @@ const AuditLog = () => {
     const colors = { create: 'bg-green-100 text-green-800', update: 'bg-blue-100 text-blue-800', delete: 'bg-red-100 text-red-800', login: 'bg-indigo-100 text-indigo-800', logout: 'bg-gray-100 text-gray-800' };
     return <span className={`px-2 py-1 text-xs font-medium rounded-full ${colors[action] || 'bg-gray-100'}`}>{action}</span>;
   };
+
+  // Komponen Skeleton Loading untuk Tabel
+  const LoadingTable = () => (
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm animate-pulse">
+        <thead className="bg-gray-50"><tr className="text-left text-gray-500 uppercase border-b border-gray-200"><th className="py-3 px-4">Admin</th><th className="py-3 px-4">Aksi</th><th className="py-3 px-4">Modul</th><th className="py-3 px-4">Deskripsi</th><th className="py-3 px-4">Waktu</th><th className="py-3 px-4">Detail</th></tr></thead>
+        <tbody>
+          {[...Array(pagination.per_page)].map((_, index) => (
+            <tr key={index} className="border-b border-gray-200">
+              <td className="py-4 px-4"><div className="h-4 bg-gray-200 rounded w-3/4"></div></td>
+              <td className="py-4 px-4"><div className="h-6 bg-gray-200 rounded-full w-20"></div></td>
+              <td className="py-4 px-4"><div className="h-4 bg-gray-200 rounded w-1/2"></div></td>
+              <td className="py-4 px-4"><div className="h-4 bg-gray-200 rounded w-full"></div></td>
+              <td className="py-4 px-4"><div className="h-4 bg-gray-200 rounded w-3/4"></div></td>
+              <td className="py-4 px-4"><div className="h-8 w-20 bg-gray-200 rounded-lg"></div></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
 
   // Animasi
   const containerVariants = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.1 } } };
@@ -102,7 +141,7 @@ const AuditLog = () => {
           </div>
           
           <div className="overflow-x-auto">
-            {loading.table ? <div>Memuat...</div> : (
+            {loading.table ? <LoadingTable /> : (
               <table className="w-full text-sm">
                 <thead className="bg-gray-50"><tr className="text-left text-gray-500 uppercase border-b border-gray-200"><th className="py-3 px-4">Admin</th><th className="py-3 px-4">Aksi</th><th className="py-3 px-4">Modul</th><th className="py-3 px-4">Deskripsi</th><th className="py-3 px-4">Waktu</th><th className="py-3 px-4">Detail</th></tr></thead>
                 <tbody>
@@ -122,7 +161,7 @@ const AuditLog = () => {
           </div>
 
           <div className="flex justify-between items-center p-2 text-sm text-gray-600 border-t mt-4">
-             <span>Menampilkan {logs.length} dari {pagination.total} data</span>
+             <span>Menampilkan {pagination.current_page * pagination.per_page - pagination.per_page + 1} - {Math.min(pagination.current_page * pagination.per_page, pagination.total)} dari {pagination.total} data</span>
              <div className="flex items-center gap-2">
                 <button onClick={() => handlePageChange(pagination.current_page - 1)} disabled={pagination.current_page <= 1} className="px-2 py-1 border rounded hover:bg-gray-100 disabled:text-gray-400">Sebelumnya</button>
                 <span>Halaman {pagination.current_page} dari {pagination.last_page}</span>
@@ -156,3 +195,4 @@ const AuditLog = () => {
 };
 
 export default AuditLog;
+

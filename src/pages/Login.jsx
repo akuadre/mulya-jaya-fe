@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mail, Lock, Loader, AlertCircle, Eye, EyeOff } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
-import axiosClient from "../lib/axiosClient";
+import axios from "axios";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 // --- Komponen Input Underline Style (disesuaikan untuk Dim Mode) ---
 const UnderlineInput = ({
@@ -36,6 +38,8 @@ const UnderlineInput = ({
 
 // --- Komponen Utama Login ---
 const Login = () => {
+  const navigate = useNavigate();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -46,16 +50,26 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
     setError("");
-    try {
-      const res = await axiosClient.post("/api/admin/login", {
 
+    try {
+      const res = await axios.post(`${API_URL}/api/admin/login`, {
         email,
         password,
       });
-      localStorage.setItem("adminToken", res.data.token);
-      window.location.href = "/dashboard";
+
+      if (res.data.token) {
+        localStorage.setItem("adminToken", res.data.token);
+        navigate("/dashboard");
+      } else {
+        setError(res.data.message || "Login gagal");
+      }
     } catch (err) {
-      setError(err.response?.data?.message || "Email atau password salah!");
+      const errorMessage =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        "Email atau password salah!";
+
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

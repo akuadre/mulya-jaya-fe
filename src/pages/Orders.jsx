@@ -53,23 +53,31 @@ const OrderCard = ({ order, onViewDetail }) => {
 
   const lensaTypeMap = {
     without: "Tanpa Lensa",
-    normal: "Lensa Normal", 
-    custom: "Lensa Custom"
+    normal: "Lensa Normal",
+    custom: "Lensa Custom",
   };
 
   const lensaColors = {
     without: "bg-gray-100 text-gray-800",
     normal: "bg-green-100 text-green-800",
-    custom: "bg-blue-100 text-blue-800"
+    custom: "bg-blue-100 text-blue-800",
   };
 
   const formatDate = (dateString) => {
     const options = {
       year: "numeric",
-      month: "short",
+      month: "long",
       day: "numeric",
     };
     return new Date(dateString).toLocaleDateString("id-ID", options);
+  };
+
+  const formatTime = (dateString) => {
+    const options = {
+      hour: "2-digit",
+      minute: "2-digit",
+    };
+    return new Date(dateString).toLocaleTimeString("id-ID", options);
   };
 
   const formatPrice = (price) => {
@@ -135,7 +143,7 @@ const OrderCard = ({ order, onViewDetail }) => {
         </div>
 
         {/* Tampilkan info custom lensa jika ada */}
-        {order.lensa_type === 'custom' && (
+        {order.lensa_type === "custom" && (
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 mt-2">
             <div className="flex items-center gap-2 text-blue-700 text-xs">
               <FileText className="w-3 h-3" />
@@ -212,8 +220,8 @@ const Orders = () => {
   const lensaTypeMap = useMemo(
     () => ({
       without: "Tanpa Lensa",
-      normal: "Lensa Normal", 
-      custom: "Lensa Custom"
+      normal: "Lensa Normal",
+      custom: "Lensa Custom",
     }),
     []
   );
@@ -235,16 +243,22 @@ const Orders = () => {
   useEffect(() => {
     fetchOrders();
   }, []);
-
+  
   const formatDate = (dateString) => {
     const options = {
       year: "numeric",
       month: "long",
       day: "numeric",
+    };
+    return new Date(dateString).toLocaleDateString("id-ID", options);
+  };
+
+  const formatTime = (dateString) => {
+    const options = {
       hour: "2-digit",
       minute: "2-digit",
     };
-    return new Date(dateString).toLocaleDateString("id-ID", options);
+    return new Date(dateString).toLocaleTimeString("id-ID", options);
   };
 
   const formatPrice = (price) => {
@@ -497,7 +511,7 @@ const Orders = () => {
                   <tbody>
                     {paginatedOrders.length > 0 ? (
                       paginatedOrders.map((o, index) => {
-                        const isCustomLense = o.lensa_type === 'custom';
+                        const isCustomLense = o.lensa_type === "custom";
 
                         return (
                           <tr
@@ -527,7 +541,7 @@ const Orders = () => {
                                 <span className="text-blue-600 font-medium text-xs bg-blue-50 px-2 py-1 rounded">
                                   Custom
                                 </span>
-                              ) : o.lensa_type === 'normal' ? (
+                              ) : o.lensa_type === "normal" ? (
                                 <span className="text-green-600 font-medium text-xs bg-green-50 px-2 py-1 rounded">
                                   Normal
                                 </span>
@@ -643,20 +657,24 @@ const Orders = () => {
             setIsDetailModalOpen(false);
             setSelectedOrder(null);
           }}
-          title={`Detail Pesanan - ORD-${String(selectedOrder.id).padStart(4, "0")}`}
+          title={`Detail Pesanan - ORD-${String(selectedOrder.id).padStart(
+            4,
+            "0"
+          )}`}
           size="lg"
           footer={
             <div className="flex flex-col sm:flex-row justify-between gap-3">
               <div className="flex gap-2">
-                {selectedOrder.lensa_type === 'custom' && selectedOrder.photo_url && (
-                  <button
-                    onClick={handleViewPhoto}
-                    className="bg-blue-100 text-blue-700 font-semibold px-4 py-2 rounded-lg hover:bg-blue-200 transition flex items-center text-sm"
-                  >
-                    <Eye className="w-4 h-4 mr-1" />
-                    Lihat Foto Resep
-                  </button>
-                )}
+                {selectedOrder.lensa_type === "custom" &&
+                  selectedOrder.photo_url && (
+                    <button
+                      onClick={handleViewPhoto}
+                      className="bg-blue-100 text-blue-700 font-semibold px-4 py-2 rounded-lg hover:bg-blue-200 transition flex items-center text-sm"
+                    >
+                      <Eye className="w-4 h-4 mr-1" />
+                      Lihat Foto Resep
+                    </button>
+                  )}
               </div>
               <div className="flex gap-2">
                 <button
@@ -683,46 +701,72 @@ const Orders = () => {
           <div className="space-y-6">
             {/* Informasi Dasar */}
             <div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-3">Informasi Pesanan</h3>
+              <h3 className="text-lg font-semibold text-gray-800 mb-3">
+                Informasi Pesanan
+              </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-gray-600">Pelanggan</p>
-                  <p className="font-semibold text-gray-800">{selectedOrder.user?.name || "-"}</p>
+                  <p className="font-semibold text-gray-800">
+                    {selectedOrder.user?.name || "-"}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Produk</p>
-                  <p className="font-semibold text-gray-800">{selectedOrder.product?.name || "-"}</p>
+                  <p className="font-semibold text-gray-800">
+                    {selectedOrder.product?.name || "-"}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Total Harga</p>
-                  <p className="font-semibold text-gray-800">{formatPrice(selectedOrder.total_price)}</p>
+                  <p className="font-semibold text-gray-800">
+                    {formatPrice(selectedOrder.total_price)}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Metode Pembayaran</p>
-                  <p className="font-semibold text-gray-800 capitalize">{selectedOrder.payment_method || "-"}</p>
+                  <p className="font-semibold text-gray-800 capitalize">
+                    {selectedOrder.payment_method || "-"}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Jenis Lensa</p>
-                  <p className="font-semibold text-gray-800">{lensaTypeMap[selectedOrder.lensa_type] || selectedOrder.lensa_type}</p>
+                  <p className="font-semibold text-gray-800">
+                    {lensaTypeMap[selectedOrder.lensa_type] ||
+                      selectedOrder.lensa_type}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Dibuat Pada</p>
-                  <p className="font-semibold text-gray-800">{formatDate(selectedOrder.created_at)}</p>
+                  <div className="font-semibold text-gray-800">
+                    {formatDate(selectedOrder.created_at)}
+                    <div className="text-sm font-normal text-gray-600 mt-1">
+                      pukul {formatTime(selectedOrder.created_at)}
+                    </div>
+                  </div>
                 </div>
                 <div className="md:col-span-2">
                   <p className="text-sm text-gray-600">Alamat Pengiriman</p>
-                  <p className="font-semibold text-gray-800">{selectedOrder.address || "-"}</p>
+                  <p className="font-semibold text-gray-800">
+                    {selectedOrder.address || "-"}
+                  </p>
                 </div>
               </div>
             </div>
 
             {/* Ubah Status */}
             <div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-3">Ubah Status</h3>
+              <h3 className="text-lg font-semibold text-gray-800 mb-3">
+                Ubah Status
+              </h3>
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700">
                   Status Saat Ini:{" "}
-                  <span className={`font-semibold ${statusColors[selectedOrder.status] || ""} px-2 py-1 rounded`}>
+                  <span
+                    className={`font-semibold ${
+                      statusColors[selectedOrder.status] || ""
+                    } px-2 py-1 rounded`}
+                  >
                     {statusMap[selectedOrder.status] || selectedOrder.status}
                   </span>
                 </label>

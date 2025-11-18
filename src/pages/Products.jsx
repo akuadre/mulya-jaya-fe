@@ -21,12 +21,13 @@ const ImageWithLoader = ({ src, alt }) => {
       <img
         src={src}
         alt={alt}
-        className={`w-full h-full object-cover rounded-md shadow-sm transition-opacity duration-300 ${isLoaded ? "opacity-100" : "opacity-0"}`}
+        className={`w-full h-full object-cover rounded-md shadow-sm transition-opacity duration-300 ${
+          isLoaded ? "opacity-100" : "opacity-0"
+        }`}
         onLoad={() => setIsLoaded(true)}
         onError={(e) => {
           e.target.onerror = null;
-          e.target.src =
-            "https://placehold.co/80x80/f3f4f6/4f4f4f?text=Gagal";
+          e.target.src = "https://placehold.co/80x80/f3f4f6/4f4f4f?text=Gagal";
         }}
       />
     </div>
@@ -41,14 +42,18 @@ const ProductCard = ({ product, index, onEdit, onDelete }) => {
         <ImageWithLoader
           src={
             product.image_url
-              ? `${import.meta.env.VITE_API_URL}/images/products/${product.image_url}`
+              ? `${import.meta.env.VITE_API_URL}/images/products/${
+                  product.image_url
+                }`
               : "https://placehold.co/80x80/f3f4f6/4f4f4f?text=N/A"
           }
           alt={product.name}
         />
         <div className="flex-1 min-w-0">
           <div className="flex justify-between items-start">
-            <h3 className="font-semibold text-gray-800 truncate">{product.name}</h3>
+            <h3 className="font-semibold text-gray-800 truncate">
+              {product.name}
+            </h3>
             <span className="text-xs font-medium px-2 py-1 bg-blue-100 text-blue-800 rounded-full capitalize">
               {product.type}
             </span>
@@ -127,7 +132,7 @@ const Products = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await axiosClient.get("/api/products");
+      const response = await axiosClient.get("/api/products/admin");
       setProducts(Array.isArray(response.data.data) ? response.data.data : []);
     } catch (err) {
       setError("Gagal memuat data. Pastikan server berjalan.");
@@ -224,15 +229,11 @@ const Products = () => {
     });
 
     try {
-      await axiosClient.post(
-        `/api/products/${editingProduct.id}`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      await axiosClient.post(`/api/products/${editingProduct.id}`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
       setIsEditModalOpen(false);
       setEditingProduct(null);
       fetchProducts();
@@ -249,9 +250,7 @@ const Products = () => {
   const confirmDelete = async () => {
     setIsSubmitting(true);
     try {
-      await axiosClient.delete(
-        `/api/products/${productToDelete.id}`
-      );
+      await axiosClient.delete(`/api/products/${productToDelete.id}`);
       setIsDeleteModalOpen(false);
       setProductToDelete(null);
       fetchProducts();
@@ -329,7 +328,10 @@ const Products = () => {
   const LoadingCards = () => (
     <div className="space-y-4">
       {[...Array(rowsPerPage)].map((_, index) => (
-        <div key={index} className="bg-white rounded-lg border border-gray-200 p-4 animate-pulse">
+        <div
+          key={index}
+          className="bg-white rounded-lg border border-gray-200 p-4 animate-pulse"
+        >
           <div className="flex items-start gap-3">
             <div className="w-12 h-12 bg-gray-200 rounded-md"></div>
             <div className="flex-1">
@@ -466,13 +468,17 @@ const Products = () => {
                           <ImageWithLoader
                             src={
                               p.image_url
-                                ? `${import.meta.env.VITE_API_URL}/images/products/${p.image_url}`
+                                ? `${
+                                    import.meta.env.VITE_API_URL
+                                  }/images/products/${p.image_url}`
                                 : "https://placehold.co/80x80/f3f4f6/4f4f4f?text=N/A"
                             }
                             alt={p.name}
                           />
                         </td>
-                        <td className="py-3 px-4 max-w-[150px] truncate">{p.name}</td>
+                        <td className="py-3 px-4 max-w-[150px] truncate">
+                          {p.name}
+                        </td>
                         <td className="py-3 px-4 capitalize">{p.type}</td>
                         <td className="py-3 px-4 whitespace-nowrap">
                           IDR {p.price ? p.price.toLocaleString("id-ID") : "-"}
@@ -551,7 +557,9 @@ const Products = () => {
                 Sebelumnya
               </button>
               <span className="text-sm">
-                {startIndex + 1}-{Math.min(startIndex + rowsPerPage, filteredItems.length)} dari {filteredItems.length}
+                {startIndex + 1}-
+                {Math.min(startIndex + rowsPerPage, filteredItems.length)} dari{" "}
+                {filteredItems.length}
               </span>
               <button
                 onClick={() => setPage((p) => Math.min(p + 1, totalPages - 1))}
@@ -565,9 +573,12 @@ const Products = () => {
         )}
 
         {!loading && filteredItems.length === 0 && (
-          <motion.div variants={itemVariants} className="text-center py-8 text-gray-500">
-            {filterText || filterType !== "Semua" 
-              ? "Tidak ada produk yang sesuai dengan filter" 
+          <motion.div
+            variants={itemVariants}
+            className="text-center py-8 text-gray-500"
+          >
+            {filterText || filterType !== "Semua"
+              ? "Tidak ada produk yang sesuai dengan filter"
               : "Belum ada produk. Tambah produk pertama Anda!"}
           </motion.div>
         )}
@@ -598,7 +609,11 @@ const Products = () => {
           </div>
         }
       >
-        <form id="addProductForm" onSubmit={handleAddSubmit} className="space-y-4">
+        <form
+          id="addProductForm"
+          onSubmit={handleAddSubmit}
+          className="space-y-4"
+        >
           <FormInput
             label="Foto Produk"
             id="photo"
@@ -711,12 +726,18 @@ const Products = () => {
             </div>
           }
         >
-          <form id="editProductForm" onSubmit={handleEditSubmit} className="space-y-4">
+          <form
+            id="editProductForm"
+            onSubmit={handleEditSubmit}
+            className="space-y-4"
+          >
             {editingProduct.image_url &&
               !(editingProduct.photo instanceof File) && (
                 <div className="flex justify-center">
-                  <img  
-                    src={`${import.meta.env.VITE_API_URL}/images/products/${editingProduct.image_url}`}
+                  <img
+                    src={`${import.meta.env.VITE_API_URL}/images/products/${
+                      editingProduct.image_url
+                    }`}
                     alt={editingProduct.name}
                     className="w-24 h-24 object-cover rounded-lg mb-2"
                   />
